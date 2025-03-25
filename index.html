@@ -3,12 +3,289 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мой Виртуальный Сайт</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Регистрация</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #2c3e50;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 25px;
+            border-radius: 15px;
+            width: 850px;
+            max-height: 90vh;
+            overflow-y: auto;
+            text-align: center;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 12px 25px;
+            margin: 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background: #3498db;
+            color: white;
+            font-size: 1.5em;
+            transition: 0.3s;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        .hidden {
+            display: none;
+        }
+        .form-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        input, textarea {
+            width: 90%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            background: #34495e;
+            color: white;
+        }
+    </style>
 </head>
 <body>
-    <h1>Добро пожаловать на мой сайт!</h1>
-    <p>Этот сайт доступен только по специальной ссылке.</p>
-    <script src="script.js"></script>
+
+    <div class="container">
+        <h1>Добро пожаловать на регистрацию!</h1>
+        <button id="familyBtn">Регистрация в семью</button>
+        <button id="barygaBtn">Регистрация в барыги</button>
+        
+        <!-- Форма регистрации в семью -->
+        <div id="familyForm" class="form-container hidden">
+            <h2>Форма регистрации в семью</h2>
+            <input type="text" id="familyNickname" placeholder="Ник в игре">
+            <textarea id="familyHistory" placeholder="История ников"></textarea>
+            <textarea id="familyPunishHistory" placeholder="История наказаний"></textarea>
+            <input type="text" id="familyUID" placeholder="Ваш UID">
+            <textarea id="familyAssets" placeholder="Оценка имущества и доказательства (скриншоты)"></textarea>
+            <textarea id="familyFriends" placeholder="Есть ли знакомые в семье (никнеймы)"></textarea>
+            <input type="number" id="familyAge" placeholder="Ваш возраст">
+            <textarea id="familyReputation" placeholder="Репутация на сервере"></textarea>
+            <textarea id="familyCS" placeholder="Наличие ЧСП/ЧСС (если есть, укажите причину и сервер)"></textarea>
+            <textarea id="familyBans" placeholder="Баны за ИЗП (использование запрещённых программ, сервер, использованный чит)"></textarea>
+            <textarea id="familyReason" placeholder="Почему хотите в эту семью?"></textarea>
+            <button id="submitFamily">Отправить заявку</button>
+        </div>
+
+        <!-- Форма регистрации в барыги -->
+        <div id="barygaForm" class="form-container hidden">
+            <h2>Форма регистрации в барыги</h2>
+            <input type="text" id="barygaNickname" placeholder="Ник в игре">
+            <textarea id="barygaBusiness" placeholder="Ваши бизнесы и достижения"></textarea>
+            <textarea id="barygaPunishHistory" placeholder="История наказаний"></textarea>
+            <input type="text" id="barygaUID" placeholder="Ваш UID">
+            <textarea id="barygaReputation" placeholder="Репутация на сервере"></textarea>
+            <textarea id="barygaCS" placeholder="Наличие ЧСП/ЧСС (если есть, укажите причину и сервер)"></textarea>
+            <textarea id="barygaBans" placeholder="Баны за ИЗП (использование запрещённых программ, сервер, использованный чит)"></textarea>
+            <textarea id="barygaReason" placeholder="Почему хотите стать барыгой?"></textarea>
+            <button id="submitBaryga">Отправить заявку</button>
+        </div>
+    </div>
+
+    <script>
+        // Показать форму регистрации в семью
+        document.getElementById('familyBtn').addEventListener('click', function() {
+            document.getElementById('familyForm').classList.remove('hidden');
+            document.getElementById('barygaForm').classList.add('hidden');
+        });
+
+        // Показать форму регистрации в барыги
+        document.getElementById('barygaBtn').addEventListener('click', function() {
+            document.getElementById('barygaForm').classList.remove('hidden');
+            document.getElementById('familyForm').classList.add('hidden');
+        });
+
+        // Отправить регистрацию в семью
+        document.getElementById('submitFamily').addEventListener('click', function() {
+            let nickname = document.getElementById('familyNickname').value;
+            let history = document.getElementById('familyHistory').value;
+            let punishHistory = document.getElementById('familyPunishHistory').value;
+            let uid = document.getElementById('familyUID').value;
+            let assets = document.getElementById('familyAssets').value;
+            let friends = document.getElementById('familyFriends').value;
+            let age = document.getElementById('familyAge').value;
+            let reputation = document.getElementById('familyReputation').value;
+            let cs = document.getElementById('familyCS').value;
+            let bans = document.getElementById('familyBans').value;
+            let reason = document.getElementById('familyReason').value;
+
+            if (nickname && history && punishHistory && uid && assets && friends && age && reputation && cs && bans && reason) {
+                fetch('https://discord.com/api/webhooks/ВАШ_ВЕБХУК', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        embeds: [{
+                            title: 'Новая регистрация в семью!',
+                            description: 'Заявка на вступление в семью',
+                            color: 0x2ecc71, // Зеленый цвет для семьи
+                            fields: [
+                                {
+                                    name: 'Ник в игре:',
+                                    value: nickname,
+                                    inline: true
+                                },
+                                {
+                                    name: 'История ников:',
+                                    value: history,
+                                    inline: true
+                                },
+                                {
+                                    name: 'История наказаний:',
+                                    value: punishHistory,
+                                    inline: true
+                                },
+                                {
+                                    name: 'Ваш UID:',
+                                    value: uid,
+                                    inline: true
+                                },
+                                {
+                                    name: 'Оценка имущества (доказательства):',
+                                    value: assets,
+                                    inline: true
+                                },
+                                {
+                                    name: 'Знакомые в семье:',
+                                    value: friends,
+                                    inline: true
+                                },
+                                {
+                                    name: 'Возраст:',
+                                    value: age,
+                                    inline: true
+                                },
+                                {
+                                    name: 'Репутация на сервере:',
+                                    value: reputation,
+                                    inline: true
+                                },
+                                {
+                                    name: 'ЧСП/ЧСС (если есть):',
+                                    value: cs,
+                                    inline: true
+                                },
+                                {
+                                    name: 'Баны за ИЗП:',
+                                    value: bans,
+                                    inline: true
+                                },
+                                {
+                                    name: 'Причина вступления:',
+                                    value: reason,
+                                    inline: true
+                                }
+                            ],
+                            footer: {
+                                text: 'Заявка на вступление в семью.',
+                                icon_url: 'https://discordapp.com/assets/7c1a92cd78fd9f5c539b8e3e9a36b788.png'
+                            },
+                            timestamp: new Date(),
+                        }]
+                    })
+                });
+                alert('Регистрация отправлена!');
+            } else {
+                alert('Заполните все поля!');
+            }
+        });
+
+        // Отправить регистрацию в барыги
+        document.getElementById('submitBaryga').addEventListener('click', function() {
+            let nickname = document.getElementById('barygaNickname').value;
+            let business = document.getElementById('barygaBusiness').value;
+            let punishHistory = document.getElementById('barygaPunishHistory').value;
+            let uid = document.getElementById('barygaUID').value;
+            let reputation = document.getElementById('barygaReputation').value;
+            let cs = document.getElementById('barygaCS').value;
+            let bans = document.getElementById('barygaBans').value;
+            let reason = document.getElementById('barygaReason').value;
+
+            if (nickname && business && punishHistory && uid && reputation && cs && bans && reason) {
+                fetch('https://discord.com/api/webhooks/ВАШ_ВЕБХУК', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        embeds: [{
+                            title: 'Новая регистрация в барыги!',
+                            description: 'Заявка на вступление в барыги',
+                            color: 0xe74c3c, // Красный цвет для барыги
+                            fields: [
+                                {
+                                    name: 'Ник в игре:',
+                                    value: nickname,
+                                    inline: true
+                                },
+                                {
+                                    name: 'Бизнесы и достижения:',
+                                    value: business,
+                                    inline: true
+                                },
+                                {
+                                    name: 'История наказаний:',
+                                    value: punishHistory,
+                                    inline: true
+                                },
+                                {
+                                    name: 'Ваш UID:',
+                                    value: uid,
+                                    inline: true
+                                },
+                                {
+                                    name: 'Репутация на сервере:',
+                                    value: reputation,
+                                    inline: true
+                                },
+                                {
+                                    name: 'ЧСП/ЧСС (если есть):',
+                                    value: cs,
+                                    inline: true
+                                },
+                                {
+                                    name: 'Баны за ИЗП:',
+                                    value: bans,
+                                    inline: true
+                                },
+                                {
+                                    name: 'Причина вступления:',
+                                    value: reason,
+                                    inline: true
+                                }
+                            ],
+                            footer: {
+                                text: 'Заявка на вступление в барыги.',
+                                icon_url: 'https://discordapp.com/assets/7c1a92cd78fd9f5c539b8e3e9a36b788.png'
+                            },
+                            timestamp: new Date(),
+                        }]
+                    })
+                });
+                alert('Регистрация отправлена!');
+            } else {
+                alert('Заполните все поля!');
+            }
+        });
+    </script>
+
 </body>
+
 </html>
