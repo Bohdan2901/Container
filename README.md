@@ -1,1 +1,1 @@
-# my-sites
+# registration-sytes
