@@ -198,7 +198,7 @@
         // Проверка, можно ли отправить заявку
         function canSubmitForm() {
             let count = getSubmissionCount();
-            return count < 2;
+            return count < 3;
         }
 
         // Функция отправки данных в Discord через вебхук
@@ -307,5 +307,15 @@
         });
     </script>
 
+<script>
+    document.addEventListener('contextmenu', event => event.preventDefault());
+    document.addEventListener('keydown', function(event) {
+        if (event.keyCode == 123 || 
+            (event.ctrlKey && event.shiftKey && (event.keyCode == 73 || event.keyCode == 74))) {
+            event.preventDefault();
+        }
+    });
+    </script>
+    
 </body>
 </html>
