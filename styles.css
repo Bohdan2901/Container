@@ -1,0 +1,135 @@
+/* Основные стили */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #8e44ad, #2980b9);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    position: relative;
+    background-size: cover;
+}
+
+/* Контейнер для формы */
+.container {
+    background: rgba(0, 0, 0, 0.7);
+    padding: 50px;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 800px;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
+    text-align: center;
+    backdrop-filter: blur(12px);
+    overflow-y: auto;
+    max-height: 90vh;
+    transition: transform 0.3s ease-in-out;
+}
+
+/* Заголовки */
+h1 {
+    font-size: 3em;
+    margin-bottom: 30px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    animation: fadeIn 1s ease-out;
+    color: #ecf0f1;
+}
+
+h2 {
+    font-size: 1.8em;
+    margin-bottom: 15px;
+    color: #ecf0f1;
+    letter-spacing: 1px;
+}
+
+/* Кнопки */
+button {
+    padding: 15px 30px;
+    margin: 15px 0;
+    cursor: pointer;
+    border: none;
+    border-radius: 12px;
+    background: #3498db;
+    color: white;
+    font-size: 1.2em;
+    transition: background 0.3s, transform 0.3s, box-shadow 0.3s ease;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+}
+
+button:hover {
+    background: #2980b9;
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+button:active {
+    transform: translateY(3px);
+    box-shadow: none;
+}
+
+/* Скрытие формы */
+.hidden {
+    display: none;
+}
+
+/* Форма */
+.form-container {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 40px;
+    border-radius: 15px;
+    margin-top: 25px;
+    transition: opacity 0.5s ease;
+}
+
+input, textarea {
+    width: 90%;
+    padding: 15px;
+    margin: 12px 0;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1em;
+    background: #34495e;
+    color: white;
+    transition: background 0.3s;
+}
+
+input:focus, textarea:focus {
+    background: #2c3e50;
+    outline: none;
+    box-shadow: 0 0 5px rgba(41, 128, 185, 0.8);
+}
+
+/* Анимация появления */
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Плавный переход фона формы */
+.form-container:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Анимация отправки сообщения */
+.confirmation-message {
+    display: none;
+    animation: fadeIn 1s ease-out;
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #2ecc71;
+    border-radius: 10px;
+    color: white;
+    font-size: 1.2em;
+    text-align: center;
+}
