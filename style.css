@@ -133,29 +133,3 @@ input:focus, textarea:focus {
     font-size: 1.2em;
     text-align: center;
 }
-
-/* Стили для панели управления заявками */
-#adminPanel {
-    margin-top: 30px;
-    background-color: rgba(0, 0, 0, 0.6);
-    padding: 20px;
-    border-radius: 10px;
-    text-align: center;
-}
-
-button {
-    margin: 10px;
-}
-
-/* Стили для сообщений */
-.confirmation-message {
-    display: none;
-    animation: fadeIn 1s ease-out;
-    margin-top: 20px;
-    padding: 15px;
-    background-color: #2ecc71;
-    border-radius: 10px;
-    color: white;
-    font-size: 1.2em;
-    text-align: center;
-}
