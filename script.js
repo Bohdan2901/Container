@@ -26,6 +26,7 @@ function sendToDiscord(data, webhookURL, type) {
             embeds: [{
                 title: type === 'family' ? '📜 Новая заявка в семью' : '💰 Новая заявка в барыги',
                 color: color,
+                description: '',
                 fields: data.map(item => ({
                     name: `📌 ${item.name}`,
                     value: item.value || '*Не указано*',
@@ -87,7 +88,7 @@ document.getElementById('submitFamily').addEventListener('click', function() {
     ];
 
     // Отправляем данные в Discord
-    sendToDiscord(data, 'https://discord.com/api/webhooks/1355254098957570178/yF20UNGgrjoEjGzpGiV2o4lkaSK9w2ub7dCvRSQ9gLYyKZ6GvOamqg1O0DfFheXUmcUn', 'family');
+    sendToDiscord(data, 'https://discord.com/api/webhooks/your_webhook_url', 'family');
 
     incrementSubmissionCount();
     document.getElementById('familyConfirmation').style.display = 'block';
@@ -121,7 +122,7 @@ document.getElementById('submitBaryga').addEventListener('click', function() {
     ];
 
     // Отправляем данные в Discord
-    sendToDiscord(data, 'https://discord.com/api/webhooks/1354156657097052381/RgyQQhCadsRiyeLE0ByC0evRPoCnuzIf-OJsTinvKzhv_JZFno1JeMKm7xqTVvhLZq-M', 'baryga');
+    sendToDiscord(data, 'https://discord.com/api/webhooks/your_webhook_url', 'baryga');
 
     incrementSubmissionCount();
     document.getElementById('barygaConfirmation').style.display = 'block';
