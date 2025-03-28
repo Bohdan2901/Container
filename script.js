@@ -26,7 +26,6 @@ function sendToDiscord(data, webhookURL, type) {
             embeds: [{
                 title: type === 'family' ? '📜 Новая заявка в семью' : '💰 Новая заявка в барыги',
                 color: color,
-                description: '📥 **Подана новая заявка!**\n**Детали ниже:**',
                 fields: data.map(item => ({
                     name: `📌 ${item.name}`,
                     value: item.value || '*Не указано*',
