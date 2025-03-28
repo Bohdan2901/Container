@@ -26,6 +26,7 @@
             <textarea id="familyCS" placeholder="Наличие ЧСП/ЧСС (если есть, укажите причину и сервер)"></textarea>
             <textarea id="familyBans" placeholder="Баны за ИЗП (использование запрещённых программ, сервер, использованный чит)"></textarea>
             <textarea id="familyReason" placeholder="Почему хотите в эту семью?"></textarea>
+            <input type="text" id="discordID" placeholder="Discord ID или имя (например, feing436)">
             <button id="submitFamily">Отправить заявку</button>
             <div id="familyConfirmation" class="confirmation-message">Заявка отправлена!</div>
         </div>
@@ -41,8 +42,21 @@
             <textarea id="barygaCS" placeholder="Наличие ЧСП/ЧСС (если есть, укажите причину и сервер)"></textarea>
             <textarea id="barygaBans" placeholder="Баны за ИЗП (использование запрещённых программ, сервер, использованный чит)"></textarea>
             <textarea id="barygaReason" placeholder="Почему хотите стать барыгой?"></textarea>
+            <input type="text" id="barygaDiscordID" placeholder="Discord ID или имя (например, feing436)">
             <button id="submitBaryga">Отправить заявку</button>
             <div id="barygaConfirmation" class="confirmation-message">Заявка отправлена!</div>
+        </div>
+
+        <!-- Управление заявками -->
+        <div id="adminPanel" class="hidden">
+            <h2>Управление заявками</h2>
+            <div id="applicationDetails">
+                <p id="appName"></p>
+                <p id="appDiscordID"></p>
+            </div>
+            <button id="approveBtn">Одобрить</button>
+            <button id="rejectBtn">Отказать</button>
+            <button id="blockBtn">Блокировать</button>
         </div>
     </div>
 
