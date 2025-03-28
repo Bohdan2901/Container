@@ -72,7 +72,6 @@ document.getElementById('submitFamily').addEventListener('click', function() {
     let cs = document.getElementById('familyCS').value;
     let bans = document.getElementById('familyBans').value;
     let reason = document.getElementById('familyReason').value;
-    let discordID = document.getElementById('discordID').value;
 
     let data = [
         { name: 'Никнейм', value: nickname },
@@ -85,12 +84,11 @@ document.getElementById('submitFamily').addEventListener('click', function() {
         { name: 'Репутация', value: reputation },
         { name: 'ЧСП/ЧСС', value: cs },
         { name: 'Баны за ИЗП', value: bans },
-        { name: 'Причина', value: reason },
-        { name: 'Discord ID', value: discordID }
+        { name: 'Причина', value: reason }
     ];
 
     // Отправляем данные в Discord
-    sendToDiscord(data, 'https://discord.com/api/webhooks/1355254098957570178/yF20UNGgrjoEjGzpGiV2o4lkaSK9w2ub7dCvRSQ9gLYyKZ6GvOamqg1O0DfFheXUmcUn', 'family');
+    sendToDiscord(data, 'https://discord.com/api/webhooks/your_webhook_url', 'family');
 
     incrementSubmissionCount();
     document.getElementById('familyConfirmation').style.display = 'block';
@@ -111,7 +109,6 @@ document.getElementById('submitBaryga').addEventListener('click', function() {
     let cs = document.getElementById('barygaCS').value;
     let bans = document.getElementById('barygaBans').value;
     let reason = document.getElementById('barygaReason').value;
-    let discordID = document.getElementById('barygaDiscordID').value;
 
     let data = [
         { name: 'Никнейм', value: nickname },
@@ -121,29 +118,12 @@ document.getElementById('submitBaryga').addEventListener('click', function() {
         { name: 'Репутация', value: reputation },
         { name: 'ЧСП/ЧСС', value: cs },
         { name: 'Баны за ИЗП', value: bans },
-        { name: 'Причина', value: reason },
-        { name: 'Discord ID', value: discordID }
+        { name: 'Причина', value: reason }
     ];
 
     // Отправляем данные в Discord
-    sendToDiscord(data, 'https://discord.com/api/webhooks/1354156657097052381/RgyQQhCadsRiyeLE0ByC0evRPoCnuzIf-OJsTinvKzhv_JZFno1JeMKm7xqTVvhLZq-M', 'baryga');
+    sendToDiscord(data, 'https://discord.com/api/webhooks/your_webhook_url', 'baryga');
 
     incrementSubmissionCount();
     document.getElementById('barygaConfirmation').style.display = 'block';
-});
-
-// Управление заявками (кнопки: Одобрить, Отказать, Блокировать)
-document.getElementById('approveBtn').addEventListener('click', function() {
-    // Логика для одобрения заявки (выдача роли)
-    alert('Заявка одобрена! Выдана роль.');
-});
-
-document.getElementById('rejectBtn').addEventListener('click', function() {
-    // Логика для отказа (кик с сервера)
-    alert('Заявка отклонена! Пользователь кикнут с сервера.');
-});
-
-document.getElementById('blockBtn').addEventListener('click', function() {
-    // Логика для блокировки (снести айпишник)
-    alert('Заявка заблокирована! Пользователь забанен по IP.');
 });
