@@ -76,20 +76,33 @@ function validateNickname() {
 
 // Создание лобби
 function createLobby() {
-  const nickname = elements.nicknameInput.value.trim();
-  if (!nickname) {
-    showNotification("Введите никнейм!", "error");
-    return;
-  }
+  const nickname = document.getElementById('nickname').value.trim();
+  if (!nickname) return;
 
   const lobbyId = generateLobbyId();
-  const userRef = db.ref(`lobbies/${lobbyId}/players/${gameState.currentUser.uid}`);
-
-  userRef.set({
+  const playerData = {
     name: nickname,
     money: 10000,
     isHost: true
-  });
+  };
+
+  // Записываем данные одним атомарным обновлением
+  const updates = {};
+  updates[`lobbies/${lobbyId}/host`] = auth.currentUser.uid;
+  updates[`lobbies/${lobbyId}/players/${auth.currentUser.uid}`] = playerData;
+  updates[`lobbies/${lobbyId}/settings`] = {
+    maxPlayers: 8,
+    timer: 30,
+    containers: 10,
+    createdAt: firebase.database.ServerValue.TIMESTAMP
+  };
+  updates[`lobbies/${lobbyId}/status`] = "waiting";
+
+  db.ref().update(updates)
+    .then(() => {
+      window.location.href = `lobby.html?id=${lobbyId}`;
+    });
+}
 
   db.ref(`lobbies/${lobbyId}`).update({
     host: gameState.currentUser.uid,
