@@ -1,1 +1,174 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Лобби | Аукцион Контейнеров</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #FF5722;
+      --secondary: #607D8B;
+      --accent: #FFC107;
+      --dark: #263238;
+      --light: #ECEFF1;
+    }
+    
+    body {
+      font-family: 'Rubik', sans-serif;
+      background-color: var(--dark);
+      color: var(--light);
+      margin: 0;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+    
+    .lobby-id {
+      background: rgba(255,255,255,0.1);
+      padding: 10px 15px;
+      border-radius: 20px;
+      font-weight: bold;
+    }
+    
+    .players-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+      margin: 30px 0;
+    }
+    
+    .player-card {
+      background: rgba(255,255,255,0.1);
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+    }
+    
+    .player-card.host {
+      border: 2px solid var(--accent);
+    }
+    
+    .start-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 18px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin: 20px auto;
+      display: block;
+    }
+    
+    .chat-container {
+      margin-top: 40px;
+      background: rgba(0,0,0,0.2);
+      padding: 20px;
+      border-radius: 10px;
+    }
+    
+    .chat-messages {
+      height: 200px;
+      overflow-y: auto;
+      margin-bottom: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Ожидание игроков</h1>
+      <div class="lobby-id" id="lobby-id">Лобби #ABCD12</div>
+    </div>
+    
+    <div class="players-list" id="players-list">
+      <!-- Игроки будут добавляться здесь -->
+    </div>
+    
+    <button class="start-btn" id="start-game" style="display:none;">НАЧАТЬ ИГРУ</button>
+    
+    <div class="chat-container">
+      <h2>Чат</h2>
+      <div class="chat-messages" id="chat-messages"></div>
+      <input type="text" id="chat-input" placeholder="Введите сообщение..." style="width:100%;padding:10px;">
+    </div>
+  </div>
 
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+  
+  <script>
+    // Инициализация Firebase
+    const firebaseConfig = {
+      apiKey: "ВАШ_API_KEY",
+      databaseURL: "https://ВАШ_PROJECT.firebaseio.com"
+    };
+    firebase.initializeApp(firebaseConfig);
+    
+    const db = firebase.database();
+    const auth = firebase.auth();
+    const lobbyId = new URLSearchParams(window.location.search).get('id');
+    
+    // Загрузка данных лобби
+    function loadLobby() {
+      document.getElementById('lobby-id').textContent = `Лобби #${lobbyId}`;
+      
+      db.ref(`lobbies/${lobbyId}`).on('value', (snapshot) => {
+        const lobby = snapshot.val();
+        renderPlayers(lobby.players);
+        
+        // Показываем кнопку только для ведущего
+        if (lobby.host === auth.currentUser.uid) {
+          document.getElementById('start-game').style.display = 'block';
+        }
+      });
+    }
+    
+    // Отображение игроков
+    function renderPlayers(players) {
+      const container = document.getElementById('players-list');
+      container.innerHTML = '';
+      
+      for (const [id, player] of Object.entries(players)) {
+        const playerCard = document.createElement('div');
+        playerCard.className = `player-card ${player.isHost ? 'host' : ''}`;
+        playerCard.innerHTML = `
+          <h3>${player.name}</h3>
+          <p>$${player.money.toLocaleString()}</p>
+          ${player.isHost ? '<p>👑 Ведущий</p>' : ''}
+        `;
+        container.appendChild(playerCard);
+      }
+    }
+    
+    // Начало игры
+    document.getElementById('start-game').addEventListener('click', () => {
+      db.ref(`lobbies/${lobbyId}`).update({
+        status: "starting",
+        startTime: firebase.database.ServerValue.TIMESTAMP
+      }).then(() => {
+        window.location.href = `game.html?id=${lobbyId}`;
+      });
+    });
+    
+    // Инициализация при загрузке
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        loadLobby();
+      }
+    });
+  </script>
+</body>
+</html>
