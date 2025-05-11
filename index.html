@@ -112,6 +112,12 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .lobby-item:hover {
+      background: rgba(255,255,255,0.2);
     }
     
     .notification {
@@ -126,6 +132,7 @@
       box-shadow: 0 5px 15px rgba(0,0,0,0.3);
       opacity: 0;
       transition: opacity 0.3s;
+      z-index: 1000;
     }
     
     .notification.show {
@@ -143,19 +150,20 @@
       </div>
       
       <div class="input-group">
-        <input type="text" id="nickname" placeholder="Введите ваш никнейм" maxlength="12">
+        <input type="text" id="nickname" placeholder="Введите ваш никнейм" maxlength="12" autocomplete="off">
       </div>
       
       <div class="button-group">
-        <button id="create-lobby" class="btn-primary">
+        <button id="create-lobby" class="btn-primary" disabled>
           <span>➕</span> СОЗДАТЬ ЛОББИ
         </button>
-        <button id="join-lobby" class="btn-secondary">
+        <button id="join-lobby" class="btn-secondary" disabled>
           <span>👥</span> ПРИСОЕДИНИТЬСЯ
         </button>
       </div>
       
       <div class="lobby-list" id="lobby-list">
+        <p id="lobby-status">Загрузка лобби...</p>
         <!-- Лобби будут загружаться здесь -->
       </div>
     </div>
@@ -168,10 +176,250 @@
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
   
-  <!-- GSAP для анимаций -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
-  
-  <!-- Основной код игры -->
-  <script src="game.js"></script>
+  <script>
+    // Конфигурация Firebase (ЗАМЕНИТЕ НА СВОЮ!)
+  const firebaseConfig = {
+    apiKey: "AIzaSyCJuTuxuPhYxCjZXqMZWJTTmLrgxVkTGBY", // Web API Key
+    authDomain: "container-auction.firebaseapp.com",
+    databaseURL: "https://container-auction.firebaseio.com", // URL базы данных
+    projectId: "container-auction",
+    storageBucket: "container-auction.appspot.com",
+    messagingSenderId: "907236645178",
+    appId: "1:907236645178:web:7d5393a8592fbb81b7c442"
+  };
+
+
+    // Инициализация Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const auth = firebase.auth();
+
+    // Элементы интерфейса
+    const elements = {
+      nicknameInput: document.getElementById('nickname'),
+      createLobbyBtn: document.getElementById('create-lobby'),
+      joinLobbyBtn: document.getElementById('join-lobby'),
+      lobbyList: document.getElementById('lobby-list'),
+      lobbyStatus: document.getElementById('lobby-status'),
+      notification: document.getElementById('notification')
+    };
+
+    // Состояние приложения
+    const state = {
+      currentUser: null,
+      lobbies: []
+    };
+
+    // Инициализация приложения
+    async function initApp() {
+      try {
+        // Аутентификация пользователя
+        await auth.signInAnonymously();
+        
+        // Слушаем изменения статуса аутентификации
+        auth.onAuthStateChanged((user) => {
+          if (user) {
+            state.currentUser = user;
+            console.log("Пользователь авторизован:", user.uid);
+            setupEventListeners();
+            loadLobbies();
+          } else {
+            console.log("Пользователь не авторизован");
+          }
+        });
+        
+      } catch (error) {
+        showNotification("Ошибка инициализации: " + error.message, "error");
+        console.error("Ошибка инициализации:", error);
+      }
+    }
+
+    // Настройка обработчиков событий
+    function setupEventListeners() {
+      // Ввод ника
+      elements.nicknameInput.addEventListener('input', () => {
+        const nickname = elements.nicknameInput.value.trim();
+        const isValid = nickname.length >= 2;
+        
+        elements.createLobbyBtn.disabled = !isValid;
+        elements.joinLobbyBtn.disabled = !isValid;
+      });
+
+      // Создание лобби
+      elements.createLobbyBtn.addEventListener('click', createLobby);
+      
+      // Показать список лобби
+      elements.joinLobbyBtn.addEventListener('click', () => {
+        elements.lobbyList.style.display = 'block';
+        loadLobbies();
+      });
+    }
+
+    // Создание нового лобби
+    async function createLobby() {
+      const nickname = elements.nicknameInput.value.trim();
+      if (!nickname) {
+        showNotification("Введите никнейм!", "error");
+        return;
+      }
+
+      try {
+        const lobbyId = generateLobbyId();
+        const playerData = {
+          name: nickname,
+          money: 10000,
+          isHost: true
+        };
+
+        // Создаем лобби в базе данных
+        const updates = {};
+        updates[`lobbies/${lobbyId}/host`] = state.currentUser.uid;
+        updates[`lobbies/${lobbyId}/players/${state.currentUser.uid}`] = playerData;
+        updates[`lobbies/${lobbyId}/settings`] = {
+          maxPlayers: 8,
+          timer: 30,
+          containers: 10,
+          createdAt: firebase.database.ServerValue.TIMESTAMP
+        };
+        updates[`lobbies/${lobbyId}/status`] = "waiting";
+
+        await db.ref().update(updates);
+        
+        showNotification(`Лобби #${lobbyId} создано!`);
+        setTimeout(() => {
+          window.location.href = `lobby.html?id=${lobbyId}`;
+        }, 1000);
+        
+      } catch (error) {
+        showNotification("Ошибка при создании лобби: " + error.message, "error");
+        console.error("Ошибка при создании лобби:", error);
+      }
+    }
+
+    // Загрузка списка лобби
+    async function loadLobbies() {
+      try {
+        elements.lobbyStatus.textContent = "Загрузка лобби...";
+        
+        const snapshot = await db.ref('lobbies')
+          .orderByChild('status')
+          .equalTo('waiting')
+          .once('value');
+        
+        const lobbies = [];
+        snapshot.forEach((childSnapshot) => {
+          const lobby = childSnapshot.val();
+          lobby.id = childSnapshot.key;
+          lobbies.push(lobby);
+        });
+        
+        state.lobbies = lobbies;
+        renderLobbies();
+        
+      } catch (error) {
+        elements.lobbyStatus.textContent = "Ошибка загрузки лобби";
+        showNotification("Ошибка загрузки лобби: " + error.message, "error");
+        console.error("Ошибка загрузки лобби:", error);
+      }
+    }
+
+    // Отображение списка лобби
+    function renderLobbies() {
+      elements.lobbyList.innerHTML = '';
+      
+      if (state.lobbies.length === 0) {
+        elements.lobbyStatus.textContent = "Нет доступных лобби. Создайте свое!";
+        return;
+      }
+      
+      elements.lobbyStatus.textContent = "Доступные лобби:";
+      
+      state.lobbies.forEach((lobby) => {
+        const lobbyItem = document.createElement('div');
+        lobbyItem.className = 'lobby-item';
+        lobbyItem.innerHTML = `
+          <div>
+            <strong>Лобби #${lobby.id}</strong>
+            <p>Игроков: ${Object.keys(lobby.players || {}).length}/${lobby.settings.maxPlayers}</p>
+          </div>
+          <div>Ведущий: ${lobby.players[lobby.host]?.name || 'Неизвестно'}</div>
+        `;
+        
+        lobbyItem.addEventListener('click', () => {
+          joinLobby(lobby.id);
+        });
+        
+        elements.lobbyList.appendChild(lobbyItem);
+      });
+    }
+
+    // Подключение к лобби
+    async function joinLobby(lobbyId) {
+      const nickname = elements.nicknameInput.value.trim();
+      if (!nickname) {
+        showNotification("Введите никнейм!", "error");
+        return;
+      }
+
+      try {
+        // Проверяем существует ли лобби
+        const lobbySnapshot = await db.ref(`lobbies/${lobbyId}`).once('value');
+        const lobby = lobbySnapshot.val();
+        
+        if (!lobby) {
+          showNotification("Лобби не найдено!", "error");
+          return;
+        }
+        
+        // Проверяем есть ли место в лобби
+        if (Object.keys(lobby.players || {}).length >= lobby.settings.maxPlayers) {
+          showNotification("Лобби заполнено!", "error");
+          return;
+        }
+        
+        // Добавляем игрока в лобби
+        const playerData = {
+          name: nickname,
+          money: 10000,
+          isHost: false
+        };
+        
+        await db.ref(`lobbies/${lobbyId}/players/${state.currentUser.uid}`).set(playerData);
+        
+        showNotification(`Вы присоединились к лобби #${lobbyId}`);
+        setTimeout(() => {
+          window.location.href = `lobby.html?id=${lobbyId}`;
+        }, 1000);
+        
+      } catch (error) {
+        showNotification("Ошибка при подключении: " + error.message, "error");
+        console.error("Ошибка при подключении:", error);
+      }
+    }
+
+    // Показать уведомление
+    function showNotification(message, type = "success") {
+      const notification = elements.notification;
+      notification.textContent = message;
+      notification.className = `notification show ${type}`;
+      
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 3000);
+    }
+
+    // Генератор ID лобби
+    function generateLobbyId() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let result = '';
+      for (let i = 0; i < 6; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
+    }
+
+    // Запуск приложения
+    document.addEventListener('DOMContentLoaded', initApp);
+  </script>
 </body>
 </html>
