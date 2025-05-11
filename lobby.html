@@ -82,6 +82,49 @@
       height: 200px;
       overflow-y: auto;
       margin-bottom: 15px;
+      background: rgba(0,0,0,0.1);
+      padding: 10px;
+      border-radius: 5px;
+    }
+    
+    .chat-input-container {
+      display: flex;
+      gap: 10px;
+    }
+    
+    #chat-input {
+      flex-grow: 1;
+      padding: 10px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid var(--secondary);
+      border-radius: 5px;
+      color: white;
+    }
+    
+    #send-message {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0 20px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    
+    .message {
+      margin-bottom: 8px;
+      padding: 5px;
+      border-radius: 3px;
+    }
+    
+    .message-sender {
+      font-weight: bold;
+      color: var(--accent);
+    }
+    
+    .message-time {
+      font-size: 0.8em;
+      color: var(--secondary);
+      margin-left: 10px;
     }
   </style>
 </head>
@@ -99,9 +142,12 @@
     <button class="start-btn" id="start-game" style="display:none;">НАЧАТЬ ИГРУ</button>
     
     <div class="chat-container">
-      <h2>Чат</h2>
+      <h2>Чат лобби</h2>
       <div class="chat-messages" id="chat-messages"></div>
-      <input type="text" id="chat-input" placeholder="Введите сообщение..." style="width:100%;padding:10px;">
+      <div class="chat-input-container">
+        <input type="text" id="chat-input" placeholder="Введите сообщение...">
+        <button id="send-message">Отправить</button>
+      </div>
     </div>
   </div>
 
@@ -112,36 +158,81 @@
   <script>
     // Инициализация Firebase
     const firebaseConfig = {
-      apiKey: "ВАШ_API_KEY",
-      databaseURL: "https://ВАШ_PROJECT.firebaseio.com"
-    };
-    firebase.initializeApp(firebaseConfig);
+    apiKey: "AIzaSyCJuTuxuPhYxCjZXqMZWJTTmLrgxVkTGBY", // Web API Key
+    authDomain: "container-auction.firebaseapp.com",
+    databaseURL: "https://container-auction.firebaseio.com", // URL базы данных
+    projectId: "container-auction",
+    storageBucket: "container-auction.appspot.com",
+    messagingSenderId: "907236645178",
+    appId: "1:907236645178:web:7d5393a8592fbb81b7c442"
+  };
+
     
+    firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const auth = firebase.auth();
-    const lobbyId = new URLSearchParams(window.location.search).get('id');
     
-    // Загрузка данных лобби
-    function loadLobby() {
-      document.getElementById('lobby-id').textContent = `Лобби #${lobbyId}`;
+    // Получаем ID лобби из URL
+    const lobbyId = new URLSearchParams(window.location.search).get('id');
+    let currentUser = null;
+
+    // Инициализация при загрузке страницы
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        currentUser = user;
+        document.getElementById('lobby-id').textContent = `Лобби #${lobbyId}`;
+        setupLobby();
+        setupChat();
+        
+        // Удаляем игрока при закрытии вкладки
+        db.ref(`lobbies/${lobbyId}/players/${user.uid}`).onDisconnect().remove();
+      } else {
+        // Если пользователь не авторизован, делаем анонимный вход
+        auth.signInAnonymously().catch((error) => {
+          console.error("Ошибка авторизации:", error);
+        });
+      }
+    });
+
+    // Настройка лобби
+    function setupLobby() {
+      const lobbyRef = db.ref(`lobbies/${lobbyId}`);
       
-      db.ref(`lobbies/${lobbyId}`).on('value', (snapshot) => {
+      // Слушаем изменения в лобби
+      lobbyRef.on('value', (snapshot) => {
         const lobby = snapshot.val();
+        if (!lobby) {
+          alert("Лобби не найдено!");
+          window.location.href = 'index.html';
+          return;
+        }
+        
         renderPlayers(lobby.players);
         
-        // Показываем кнопку только для ведущего
-        if (lobby.host === auth.currentUser.uid) {
-          document.getElementById('start-game').style.display = 'block';
-        }
+        // Показываем кнопку "Начать игру" только для ведущего
+        document.getElementById('start-game').style.display = 
+          lobby.host === currentUser.uid ? 'block' : 'none';
+      });
+
+      // Обработка кнопки "Начать игру"
+      document.getElementById('start-game').addEventListener('click', () => {
+        lobbyRef.update({
+          status: "starting",
+          startTime: firebase.database.ServerValue.TIMESTAMP
+        }).then(() => {
+          window.location.href = `game.html?id=${lobbyId}`;
+        });
       });
     }
-    
-    // Отображение игроков
+
+    // Отображение списка игроков
     function renderPlayers(players) {
       const container = document.getElementById('players-list');
       container.innerHTML = '';
       
-      for (const [id, player] of Object.entries(players)) {
+      if (!players) return;
+      
+      Object.entries(players).forEach(([id, player]) => {
         const playerCard = document.createElement('div');
         playerCard.className = `player-card ${player.isHost ? 'host' : ''}`;
         playerCard.innerHTML = `
@@ -150,25 +241,67 @@
           ${player.isHost ? '<p>👑 Ведущий</p>' : ''}
         `;
         container.appendChild(playerCard);
+      });
+    }
+
+    // Настройка чата
+    function setupChat() {
+      const chatRef = db.ref(`chats/${lobbyId}`);
+      const chatInput = document.getElementById('chat-input');
+      const chatMessages = document.getElementById('chat-messages');
+      const sendButton = document.getElementById('send-message');
+      
+      // Загружаем последние 50 сообщений
+      chatRef.limitToLast(50).on('child_added', (snapshot) => {
+        const message = snapshot.val();
+        displayMessage(message);
+      });
+
+      // Отправка сообщения по кнопке
+      sendButton.addEventListener('click', sendMessage);
+      
+      // Отправка сообщения по Enter
+      chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+      });
+
+      function sendMessage() {
+        const text = chatInput.value.trim();
+        if (!text) return;
+        
+        // Получаем данные текущего игрока
+        db.ref(`lobbies/${lobbyId}/players/${currentUser.uid}`).once('value')
+          .then((snapshot) => {
+            const player = snapshot.val();
+            
+            // Сохраняем сообщение в базу
+            chatRef.push({
+              sender: player.name,
+              senderId: currentUser.uid,
+              text: text,
+              timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
+            
+            chatInput.value = '';
+          });
+      }
+
+      function displayMessage(message) {
+        const messageElement = document.createElement('div');
+        messageElement.className = 'message';
+        
+        const time = new Date(message.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        
+        messageElement.innerHTML = `
+          <span class="message-sender">${message.sender}:</span>
+          <span>${message.text}</span>
+          <span class="message-time">${time}</span>
+        `;
+        
+        chatMessages.appendChild(messageElement);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
       }
     }
-    
-    // Начало игры
-    document.getElementById('start-game').addEventListener('click', () => {
-      db.ref(`lobbies/${lobbyId}`).update({
-        status: "starting",
-        startTime: firebase.database.ServerValue.TIMESTAMP
-      }).then(() => {
-        window.location.href = `game.html?id=${lobbyId}`;
-      });
-    });
-    
-    // Инициализация при загрузке
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        loadLobby();
-      }
-    });
   </script>
 </body>
 </html>
