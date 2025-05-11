@@ -3,266 +3,478 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Аукцион | Аукцион Контейнеров</title>
+  <title>Аукцион Контейнеров | Игра</title>
   <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
       --primary: #FF5722;
+      --primary-dark: #E64A19;
       --secondary: #607D8B;
       --accent: #FFC107;
-      --dark: #263238;
+      --accent-light: #FFD54F;
+      --dark: #1A1A2E;
+      --darker: #16213E;
       --light: #ECEFF1;
+      --success: #4CAF50;
+      --error: #F44336;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
     
     body {
       font-family: 'Rubik', sans-serif;
-      background-color: var(--dark);
+      background: linear-gradient(135deg, var(--dark), var(--darker));
       color: var(--light);
-      margin: 0;
-      padding: 20px;
-      text-align: center;
+      min-height: 100vh;
+      overflow: hidden;
+      display: flex;
     }
     
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    
-    .container-image {
-      width: 300px;
-      height: 300px;
-      margin: 20px auto;
-      background: url('container.png') no-repeat center;
-      background-size: contain;
+    /* Основное игровое поле */
+    .game-container {
+      flex: 1;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       position: relative;
+      z-index: 1;
     }
     
-    .timer {
-      font-size: 2rem;
-      margin: 20px 0;
+    /* Боковая панель с игроками */
+    .players-panel {
+      width: 300px;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 1.5rem;
+      overflow-y: auto;
+      height: 100vh;
+      position: relative;
+      z-index: 2;
+    }
+    
+    /* Анимированный фон */
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      opacity: 0.3;
+    }
+    
+    .particle {
+      position: absolute;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: float 15s infinite linear;
+    }
+    
+    @keyframes float {
+      0% { transform: translateY(0) rotate(0deg); }
+      100% { transform: translateY(-100vh) rotate(360deg); }
+    }
+    
+    /* Информация о лобби */
+    .lobby-info {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      text-align: center;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .lobby-id {
+      font-size: 1.2rem;
+      font-weight: bold;
       color: var(--accent);
     }
     
-    .bid-panel {
-      background: rgba(255,255,255,0.1);
-      padding: 20px;
+    .container-counter {
+      font-size: 0.9rem;
+      color: var(--accent-light);
+    }
+    
+    /* Контейнер */
+    .container-wrapper {
+      position: relative;
+      width: 350px;
+      height: 350px;
+      margin: 1.5rem 0;
+      perspective: 1000px;
+    }
+    
+    .container {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 1s;
+      cursor: pointer;
+    }
+    
+    .container-front, .container-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
       border-radius: 10px;
-      margin: 20px 0;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    
+    .container-front {
+      background-image: url('https://i.imgur.com/JQ9wW4x.png');
+      transform: rotateY(0deg);
+    }
+    
+    .container-back {
+      background-image: url('https://i.imgur.com/5X6wW9L.png');
+      transform: rotateY(180deg);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+    }
+    
+    .container.open {
+      transform: rotateY(180deg);
+    }
+    
+    .container-items {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 1rem;
+    }
+    
+    .item {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+    
+    /* Таймер */
+    .timer {
+      font-size: 3rem;
+      font-weight: bold;
+      color: var(--accent);
+      margin: 1rem 0;
+      text-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+      animation: pulse 1s infinite alternate;
+    }
+    
+    @keyframes pulse {
+      from { opacity: 0.7; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1.05); }
+    }
+    
+    /* Панель ставок */
+    .bid-panel {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 1.5rem;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 500px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      margin-top: 1rem;
     }
     
     .current-bid {
-      font-size: 1.5rem;
-      margin: 10px 0;
+      font-size: 1.3rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    .bid-amount {
+      color: var(--accent);
+      font-weight: bold;
+    }
+    
+    .bidder-name {
+      color: var(--accent-light);
     }
     
     .bid-form {
       display: flex;
-      justify-content: center;
       gap: 10px;
-      margin-top: 20px;
     }
     
-    .bid-form input {
-      padding: 10px;
-      font-size: 16px;
-      width: 100px;
+    #bid-amount {
+      flex: 1;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      color: white;
+      font-size: 1.1rem;
+      text-align: center;
     }
     
-    .bid-form button {
-      background: var(--primary);
+    #bid-amount:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.2);
+    }
+    
+    #place-bid {
+      padding: 0 1.5rem;
+      background: linear-gradient(45deg, var(--primary), var(--primary-dark));
       color: white;
       border: none;
-      padding: 10px 20px;
-      border-radius: 5px;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: bold;
       cursor: pointer;
+      transition: all 0.3s;
     }
     
-    .players-money {
+    #place-bid:hover {
+      background: linear-gradient(45deg, var(--primary-dark), var(--primary));
+      transform: translateY(-2px);
+    }
+    
+    #place-bid:disabled {
+      background: var(--secondary);
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    /* Панель игроков */
+    .players-title {
+      font-size: 1.2rem;
+      color: var(--accent);
+      margin-bottom: 1rem;
       display: flex;
-      justify-content: space-around;
-      margin-top: 30px;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .player-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+    
+    .player-card {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 1rem;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      transition: all 0.3s;
+      border-left: 3px solid transparent;
+    }
+    
+    .player-card.current {
+      border-left-color: var(--accent);
+      background: rgba(255, 193, 7, 0.1);
+    }
+    
+    .player-card.host {
+      border-left-color: var(--primary);
+      background: rgba(255, 87, 34, 0.1);
+    }
+    
+    .player-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, var(--primary), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+    
+    .player-info {
+      flex: 1;
+    }
+    
+    .player-name {
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .you-badge {
+      font-size: 0.7rem;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+    }
+    
+    .player-money {
+      font-size: 0.9rem;
+      color: var(--accent-light);
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    
+    .player-roi {
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.6);
+    }
+    
+    /* Уведомления */
+    .notification {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--primary);
+      color: white;
+      padding: 15px 30px;
+      border-radius: 50px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+      z-index: 100;
+      opacity: 0;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .notification.show {
+      opacity: 1;
+      bottom: 30px;
+    }
+    
+    .notification.error {
+      background: var(--error);
+    }
+    
+    .notification.success {
+      background: var(--success);
+    }
+    
+    /* Анимации */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Адаптивность */
+    @media (max-width: 1024px) {
+      body {
+        flex-direction: column;
+      }
+      
+      .players-panel {
+        width: 100%;
+        height: auto;
+        max-height: 300px;
+        border-left: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      
+      .container-wrapper {
+        width: 300px;
+        height: 300px;
+      }
+    }
+    
+    @media (max-width: 600px) {
+      .game-container {
+        padding: 1rem;
+      }
+      
+      .container-wrapper {
+        width: 250px;
+        height: 250px;
+      }
+      
+      .bid-form {
+        flex-direction: column;
+      }
+      
+      #place-bid {
+        padding: 1rem;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Аукцион Контейнеров</h1>
-    <div id="lobby-info">Лобби #ABCD12 | Контейнер 1/10</div>
+  <!-- Анимированные частицы фона -->
+  <div class="particles" id="particles"></div>
+  
+  <!-- Основное игровое поле -->
+  <div class="game-container">
+    <div class="lobby-info">
+      <div class="lobby-id" id="lobby-id">Лобби #ABCD12</div>
+      <div class="container-counter" id="container-counter">Контейнер 1/10</div>
+    </div>
     
-    <div class="container-image" id="container-image"></div>
+    <div class="container-wrapper">
+      <div class="container" id="container">
+        <div class="container-front"></div>
+        <div class="container-back">
+          <h3>Содержимое контейнера:</h3>
+          <div class="container-items" id="container-items">
+            <!-- Предметы будут добавляться здесь -->
+          </div>
+        </div>
+      </div>
+    </div>
     
     <div class="timer" id="timer">30</div>
     
     <div class="bid-panel">
       <div class="current-bid" id="current-bid">
-        Текущая ставка: $0 (Игрок1)
+        Текущая ставка: <span class="bid-amount">$0</span> (<span class="bidder-name">Нет</span>)
       </div>
       
       <div class="bid-form">
-        <input type="number" id="bid-amount" placeholder="Сумма">
+        <input type="number" id="bid-amount" placeholder="Ваша ставка" min="1">
         <button id="place-bid">СДЕЛАТЬ СТАВКУ</button>
       </div>
     </div>
+  </div>
+  
+  <!-- Боковая панель с игроками -->
+  <div class="players-panel">
+    <h3 class="players-title">
+      <i class="fas fa-users"></i>
+      <span>Участники</span>
+    </h3>
     
-    <div class="players-money" id="players-money">
-      <!-- Информация о деньгах игроков -->
+    <div class="player-list" id="player-list">
+      <!-- Игроки будут добавляться здесь -->
     </div>
   </div>
+  
+  <!-- Уведомления -->
+  <div class="notification" id="notification"></div>
 
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
   
-  <script>
-    // Инициализация Firebase
-    const firebaseConfig = {
-      apiKey: "AIzaSyCJuTuxuPhYxCjZXqMZWJTTmLrgxVkTGBY",
-      databaseURL: "https://container-auction.firebaseio.com",
-    };
-    firebase.initializeApp(firebaseConfig);
-    
-    const db = firebase.database();
-    const lobbyId = new URLSearchParams(window.location.search).get('id');
-    let currentContainer = 1;
-    let timer = 30;
-    let timerInterval;
-    
-    // Загрузка данных игры
-    function loadGame() {
-      // Слушаем изменения в текущем контейнере
-      db.ref(`containers/${lobbyId}/current`).on('value', (snapshot) => {
-        const container = snapshot.val();
-        updateBidInfo(container);
-      });
-      
-      // Слушаем изменения в данных игроков
-      db.ref(`lobbies/${lobbyId}/players`).on('value', (snapshot) => {
-        renderPlayersMoney(snapshot.val());
-      });
-      
-      // Запускаем таймер
-      startTimer();
-    }
-    
-    // Обновление информации о ставке
-    function updateBidInfo(container) {
-      document.getElementById('current-bid').textContent = 
-        `Текущая ставка: $${container.topBid || 0} (${container.topBidderName || 'Нет'})`;
-    }
-    
-    // Отображение денег игроков
-    function renderPlayersMoney(players) {
-      const container = document.getElementById('players-money');
-      container.innerHTML = '';
-      
-      for (const [id, player] of Object.entries(players)) {
-        const playerEl = document.createElement('div');
-        playerEl.innerHTML = `
-          <strong>${player.name}</strong>
-          <p>$${player.money.toLocaleString()}</p>
-        `;
-        container.appendChild(playerEl);
-      }
-    }
-    
-    // Таймер аукциона
-    function startTimer() {
-      clearInterval(timerInterval);
-      timer = 30;
-      
-      timerInterval = setInterval(() => {
-        timer--;
-        document.getElementById('timer').textContent = timer;
-        
-        if (timer <= 0) {
-          clearInterval(timerInterval);
-          endBidding();
-        }
-      }, 1000);
-    }
-    
-    // Завершение торгов
-    function endBidding() {
-      db.ref(`containers/${lobbyId}/current`).once('value').then(snapshot => {
-        const container = snapshot.val();
-        
-        // Определяем победителя
-        if (container.topBidder) {
-          // Обновляем деньги победителя
-          db.ref(`lobbies/${lobbyId}/players/${container.topBidder}/money`)
-            .transaction(money => money - container.topBid);
-          
-          // Открываем контейнер
-          openContainer(container);
-        } else {
-          // Если ставок не было, переходим к следующему контейнеру
-          nextContainer();
-        }
-      });
-    }
-    
-    // Открытие контейнера (анимация)
-    function openContainer(container) {
-      // Здесь должна быть анимация открытия
-      setTimeout(() => {
-        showContainerItems(container);
-      }, 2000);
-    }
-    
-    // Показ содержимого контейнера
-    function showContainerItems(container) {
-      alert(`В контейнере: ${JSON.stringify(container.items)}`);
-      nextContainer();
-    }
-    
-    // Следующий контейнер
-    function nextContainer() {
-      currentContainer++;
-      db.ref(`lobbies/${lobbyId}`).once('value').then(snapshot => {
-        const lobby = snapshot.val();
-        
-        if (currentContainer > lobby.settings.containers) {
-          // Игра окончена
-          window.location.href = `endgame.html?id=${lobbyId}`;
-        } else {
-          // Начинаем новый раунд
-          startNewRound();
-        }
-      });
-    }
-    
-    // Новая ставка
-    document.getElementById('place-bid').addEventListener('click', () => {
-      const bidAmount = parseInt(document.getElementById('bid-amount').value);
-      
-      if (!bidAmount || bidAmount <= 0) {
-        alert('Введите корректную сумму!');
-        return;
-      }
-      
-      db.ref(`lobbies/${lobbyId}/players/${auth.currentUser.uid}`).once('value').then(snapshot => {
-        const player = snapshot.val();
-        
-        if (bidAmount > player.money) {
-          alert('Недостаточно средств!');
-          return;
-        }
-        
-        // Обновляем текущую ставку
-        db.ref(`containers/${lobbyId}/current`).update({
-          topBid: bidAmount,
-          topBidder: auth.currentUser.uid,
-          topBidderName: player.name
-        });
-        
-        // Сбрасываем таймер
-        startTimer();
-      });
-    });
-    
-    // Инициализация при загрузке
-    document.addEventListener('DOMContentLoaded', () => {
-      loadGame();
-    });
-  </script>
+  <!-- GSAP для анимаций -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+  
+  <script src="game.js"></script>
 </body>
 </html>
