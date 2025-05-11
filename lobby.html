@@ -3,10 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Лобби | Аукцион Контейнеров</title>
+  <title>Аукцион Контейнеров</title>
   <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    /* Стили остаются такими же как в предыдущем примере */
     :root {
       --primary: #FF5722;
       --secondary: #607D8B;
@@ -14,6 +13,7 @@
       --dark: #263238;
       --light: #ECEFF1;
     }
+    
     body {
       font-family: 'Rubik', sans-serif;
       background-color: var(--dark);
@@ -21,49 +21,159 @@
       margin: 0;
       padding: 20px;
     }
+    
     .container {
       max-width: 800px;
       margin: 0 auto;
+      padding: 20px;
     }
-    /* ... остальные стили ... */
+    
+    .logo {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .logo-icon {
+      font-size: 4rem;
+      animation: float 3s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-15px); }
+    }
+    
+    h1 {
+      font-size: 2.5rem;
+      background: linear-gradient(45deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin: 10px 0;
+    }
+    
+    .input-group {
+      margin: 20px auto;
+      max-width: 400px;
+    }
+    
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid var(--accent);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.2);
+      color: white;
+      font-size: 16px;
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      margin: 25px 0;
+    }
+    
+    button {
+      padding: 12px 25px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-secondary {
+      background: var(--secondary);
+      color: white;
+    }
+    
+    .lobby-list {
+      margin-top: 30px;
+      background: rgba(0,0,0,0.2);
+      padding: 15px;
+      border-radius: 10px;
+    }
+    
+    .lobby-item {
+      background: rgba(255,255,255,0.1);
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+    
+    .notification {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--primary);
+      color: white;
+      padding: 15px 25px;
+      border-radius: 8px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    
+    .notification.show {
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <h1>Ожидание игроков</h1>
-      <div class="lobby-id" id="lobby-id">Загрузка...</div>
-    </div>
-    
-    <div class="players-list" id="players-list">
-      <p>Загрузка игроков...</p>
-    </div>
-    
-    <button class="start-btn" id="start-game" style="display:none;">НАЧАТЬ ИГРУ</button>
-    
-    <div class="chat-container">
-      <h2>Чат лобби</h2>
-      <div class="chat-messages" id="chat-messages">
-        <p>Чат загружается...</p>
+    <div class="screen" id="start-screen">
+      <div class="logo animate__animated animate__bounceIn">
+        <div class="logo-icon">📦</div>
+        <h1>АУКЦИОН КОНТЕЙНЕРОВ</h1>
+        <p>Ставь. Выигрывай. Доминируй.</p>
       </div>
-      <div class="chat-input-container">
-        <input type="text" id="chat-input" placeholder="Введите сообщение..." disabled>
-        <button id="send-message" disabled>Отправить</button>
+      
+      <div class="input-group">
+        <input type="text" id="nickname" placeholder="Введите ваш никнейм" maxlength="12">
+      </div>
+      
+      <div class="button-group">
+        <button id="create-lobby" class="btn-primary" disabled>
+          <span>➕</span> СОЗДАТЬ ЛОББИ
+        </button>
+        <button id="join-lobby" class="btn-secondary" disabled>
+          <span>👥</span> ПРИСОЕДИНИТЬСЯ
+        </button>
+      </div>
+      
+      <div class="lobby-list" id="lobby-list">
+        <p id="lobby-status">Нажмите "Присоединиться" для загрузки лобби</p>
       </div>
     </div>
   </div>
 
-  <!-- Только одна версия Firebase! -->
+  <div class="notification" id="notification"></div>
+
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
   
   <script>
-    // Конфигурация Firebase (ЗАМЕНИТЕ НА СВОЮ!)
+    // Конфигурация Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyCJuTuxuPhYxCjZXqMZWJTTmLrgxVkTGBY",
       authDomain: "container-auction.firebaseapp.com",
-      databaseURL: "https://container-auction.firebaseio.com",
+      databaseURL: "https://container-auction-default-rtdb.firebaseio.com",
       projectId: "container-auction",
       storageBucket: "container-auction.appspot.com",
       messagingSenderId: "907236645178",
@@ -75,163 +185,210 @@
     const db = firebase.database();
     const auth = firebase.auth();
 
-    // Получаем ID лобби из URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const lobbyId = urlParams.get('id');
-    
-    if (!lobbyId) {
-      alert("Ошибка: не указан ID лобби!");
-      window.location.href = 'index.html';
-    }
+    // Элементы интерфейса
+    const elements = {
+      nicknameInput: document.getElementById('nickname'),
+      createLobbyBtn: document.getElementById('create-lobby'),
+      joinLobbyBtn: document.getElementById('join-lobby'),
+      lobbyList: document.getElementById('lobby-list'),
+      lobbyStatus: document.getElementById('lobby-status'),
+      notification: document.getElementById('notification')
+    };
 
-    // Основная функция инициализации
-    async function initLobby() {
+    // Состояние приложения
+    const state = {
+      currentUser: null
+    };
+
+    // Инициализация приложения
+    async function initApp() {
       try {
-        // 1. Аутентификация
-        const user = await auth.signInAnonymously();
+        // Аутентификация пользователя
+        const userCredential = await auth.signInAnonymously();
+        state.currentUser = userCredential.user;
         
-        // 2. Загрузка данных лобби
-        const lobbyRef = db.ref(`lobbies/${lobbyId}`);
-        lobbyRef.on('value', (snapshot) => {
-          const lobby = snapshot.val();
-          
-          if (!lobby) {
-            alert("Лобби не найдено!");
-            window.location.href = 'index.html';
-            return;
-          }
-          
-          updateLobbyUI(lobby);
-        });
+        console.log("Пользователь авторизован:", state.currentUser.uid);
         
-        // 3. Настройка чата
-        setupChat();
-        
-        // 4. Настройка кнопки "Начать игру"
-        document.getElementById('start-game').addEventListener('click', startGame);
-        
-        // 5. Удаление игрока при выходе
-        db.ref(`lobbies/${lobbyId}/players/${user.uid}`).onDisconnect().remove();
+        // Настройка обработчиков
+        setupEventListeners();
         
       } catch (error) {
+        showNotification("Ошибка инициализации: " + error.message, "error");
         console.error("Ошибка инициализации:", error);
-        alert("Произошла ошибка: " + error.message);
       }
     }
 
-    // Обновление интерфейса лобби
-    function updateLobbyUI(lobby) {
-      // Обновляем заголовок
-      document.getElementById('lobby-id').textContent = `Лобби #${lobbyId}`;
+    // Настройка обработчиков событий
+    function setupEventListeners() {
+      // Ввод ника
+      elements.nicknameInput.addEventListener('input', () => {
+        const nickname = elements.nicknameInput.value.trim();
+        const isValid = nickname.length >= 2;
+        
+        elements.createLobbyBtn.disabled = !isValid;
+        elements.joinLobbyBtn.disabled = !isValid;
+      });
+
+      // Создание лобби
+      elements.createLobbyBtn.addEventListener('click', createLobby);
       
-      // Обновляем список игроков
-      const playersContainer = document.getElementById('players-list');
-      playersContainer.innerHTML = '';
-      
-      if (!lobby.players) {
-        playersContainer.innerHTML = '<p>Нет игроков в лобби</p>';
+      // Показать список лобби
+      elements.joinLobbyBtn.addEventListener('click', loadLobbies);
+    }
+
+    // Создание нового лобби
+    async function createLobby() {
+      const nickname = elements.nicknameInput.value.trim();
+      if (!nickname) {
+        showNotification("Введите никнейм!", "error");
         return;
       }
-      
-      Object.entries(lobby.players).forEach(([id, player]) => {
-        const playerCard = document.createElement('div');
-        playerCard.className = `player-card ${player.isHost ? 'host' : ''}`;
-        playerCard.innerHTML = `
-          <h3>${player.name || 'Без имени'}</h3>
-          <p>$${player.money?.toLocaleString() || '0'}</p>
-          ${player.isHost ? '<p>👑 Ведущий</p>' : ''}
-        `;
-        playersContainer.appendChild(playerCard);
-      });
-      
-      // Показываем кнопку "Начать игру" только для ведущего
-      document.getElementById('start-game').style.display = 
-        lobby.host === auth.currentUser?.uid ? 'block' : 'none';
-    }
 
-    // Настройка чата
-    function setupChat() {
-      const chatRef = db.ref(`chats/${lobbyId}`);
-      const chatInput = document.getElementById('chat-input');
-      const sendButton = document.getElementById('send-message');
-      const chatMessages = document.getElementById('chat-messages');
-      
-      // Разблокируем поле ввода
-      chatInput.disabled = false;
-      sendButton.disabled = false;
-      chatMessages.innerHTML = '';
-      
-      // Слушаем новые сообщения
-      chatRef.limitToLast(50).on('child_added', (snapshot) => {
-        const message = snapshot.val();
-        displayMessage(message);
-      });
-      
-      // Отправка сообщения
-      sendButton.addEventListener('click', sendMessage);
-      chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
-      });
-      
-      function sendMessage() {
-        const text = chatInput.value.trim();
-        if (!text) return;
-        
-        const user = auth.currentUser;
-        if (!user) return;
-        
-        // Получаем имя игрока
-        db.ref(`lobbies/${lobbyId}/players/${user.uid}/name`).once('value')
-          .then((snapshot) => {
-            const userName = snapshot.val() || 'Аноним';
-            
-            // Отправляем сообщение
-            chatRef.push({
-              sender: userName,
-              text: text,
-              timestamp: firebase.database.ServerValue.TIMESTAMP
-            });
-            
-            chatInput.value = '';
-          });
-      }
-      
-      function displayMessage(message) {
-        const messageElement = document.createElement('div');
-        messageElement.className = 'message';
-        
-        const time = new Date(message.timestamp).toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit'
-        });
-        
-        messageElement.innerHTML = `
-          <span class="message-sender">${message.sender}:</span>
-          <span>${message.text}</span>
-          <span class="message-time">${time}</span>
-        `;
-        
-        chatMessages.appendChild(messageElement);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-      }
-    }
-
-    // Начало игры
-    async function startGame() {
       try {
-        await db.ref(`lobbies/${lobbyId}`).update({
-          status: "starting",
-          startTime: firebase.database.ServerValue.TIMESTAMP
+        const lobbyId = generateLobbyId();
+        const playerData = {
+          name: nickname,
+          money: 10000,
+          isHost: true
+        };
+
+        // Создаем лобби в базе данных
+        await db.ref(`lobbies/${lobbyId}`).set({
+          host: state.currentUser.uid,
+          players: {
+            [state.currentUser.uid]: playerData
+          },
+          settings: {
+            maxPlayers: 8,
+            timer: 30,
+            containers: 10
+          },
+          status: "waiting",
+          createdAt: firebase.database.ServerValue.TIMESTAMP
         });
         
-        window.location.href = `game.html?id=${lobbyId}`;
+        showNotification(`Лобби #${lobbyId} создано!`);
+        setTimeout(() => {
+          window.location.href = `lobby.html?id=${lobbyId}`;
+        }, 1000);
+        
       } catch (error) {
-        alert("Ошибка при запуске игры: " + error.message);
+        showNotification("Ошибка при создании лобби: " + error.message, "error");
+        console.error("Ошибка при создании лобби:", error);
       }
     }
 
-    // Запускаем приложение
-    document.addEventListener('DOMContentLoaded', initLobby);
+    // Загрузка списка лобби
+    async function loadLobbies() {
+      try {
+        elements.lobbyStatus.textContent = "Загрузка лобби...";
+        elements.lobbyList.innerHTML = '';
+        
+        const snapshot = await db.ref('lobbies')
+          .orderByChild('status')
+          .equalTo('waiting')
+          .once('value');
+        
+        if (!snapshot.exists()) {
+          elements.lobbyStatus.textContent = "Нет доступных лобби";
+          return;
+        }
+        
+        elements.lobbyStatus.textContent = "Доступные лобби:";
+        
+        snapshot.forEach((childSnapshot) => {
+          const lobby = childSnapshot.val();
+          const lobbyId = childSnapshot.key;
+          
+          const lobbyItem = document.createElement('div');
+          lobbyItem.className = 'lobby-item';
+          lobbyItem.innerHTML = `
+            <div>
+              <strong>Лобби #${lobbyId}</strong>
+              <p>Игроков: ${Object.keys(lobby.players || {}).length}/${lobby.settings.maxPlayers}</p>
+            </div>
+            <div>Ведущий: ${lobby.players[lobby.host].name}</div>
+          `;
+          
+          lobbyItem.addEventListener('click', () => {
+            joinLobby(lobbyId);
+          });
+          
+          elements.lobbyList.appendChild(lobbyItem);
+        });
+        
+      } catch (error) {
+        elements.lobbyStatus.textContent = "Ошибка загрузки лобби";
+        showNotification("Ошибка загрузки лобби: " + error.message, "error");
+        console.error("Ошибка загрузки лобби:", error);
+      }
+    }
+
+    // Подключение к лобби
+    async function joinLobby(lobbyId) {
+      const nickname = elements.nicknameInput.value.trim();
+      if (!nickname) {
+        showNotification("Введите никнейм!", "error");
+        return;
+      }
+
+      try {
+        // Проверяем существует ли лобби
+        const lobbySnapshot = await db.ref(`lobbies/${lobbyId}`).once('value');
+        const lobby = lobbySnapshot.val();
+        
+        if (!lobby) {
+          showNotification("Лобби не найдено!", "error");
+          return;
+        }
+        
+        // Проверяем есть ли место в лобби
+        if (Object.keys(lobby.players || {}).length >= lobby.settings.maxPlayers) {
+          showNotification("Лобби заполнено!", "error");
+          return;
+        }
+        
+        // Добавляем игрока в лобби
+        await db.ref(`lobbies/${lobbyId}/players/${state.currentUser.uid}`).set({
+          name: nickname,
+          money: 10000,
+          isHost: false
+        });
+        
+        showNotification(`Вы присоединились к лобби #${lobbyId}`);
+        setTimeout(() => {
+          window.location.href = `lobby.html?id=${lobbyId}`;
+        }, 1000);
+        
+      } catch (error) {
+        showNotification("Ошибка при подключении: " + error.message, "error");
+        console.error("Ошибка при подключении:", error);
+      }
+    }
+
+    // Показать уведомление
+    function showNotification(message, type = "success") {
+      const notification = elements.notification;
+      notification.textContent = message;
+      notification.className = `notification show ${type}`;
+      
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 3000);
+    }
+
+    // Генератор ID лобби
+    function generateLobbyId() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let result = '';
+      for (let i = 0; i < 6; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
+    }
+
+    // Запуск приложения
+    document.addEventListener('DOMContentLoaded', initApp);
   </script>
 </body>
 </html>
