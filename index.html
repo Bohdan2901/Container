@@ -3,86 +3,175 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CONTAINER AUCTION | Аукцион Контейнеров</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700&display=swap">
-  <link rel="stylesheet" href="style.css">
+  <title>Аукцион Контейнеров</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
-  <!-- Для анимаций -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
-
-<!-- Для сложных анимаций -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
-
-<!-- Иконки -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #FF5722;
+      --secondary: #607D8B;
+      --accent: #FFC107;
+      --dark: #263238;
+      --light: #ECEFF1;
+    }
+    
+    body {
+      font-family: 'Rubik', sans-serif;
+      background-color: var(--dark);
+      color: var(--light);
+      margin: 0;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .logo {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .logo-icon {
+      font-size: 4rem;
+      animation: float 3s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-15px); }
+    }
+    
+    h1 {
+      font-size: 2.5rem;
+      background: linear-gradient(45deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin: 10px 0;
+    }
+    
+    .input-group {
+      margin: 20px auto;
+      max-width: 400px;
+    }
+    
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid var(--accent);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.2);
+      color: white;
+      font-size: 16px;
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      margin: 25px 0;
+    }
+    
+    button {
+      padding: 12px 25px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-secondary {
+      background: var(--secondary);
+      color: white;
+    }
+    
+    .lobby-list {
+      margin-top: 30px;
+      background: rgba(0,0,0,0.2);
+      padding: 15px;
+      border-radius: 10px;
+    }
+    
+    .lobby-item {
+      background: rgba(255,255,255,0.1);
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .notification {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--primary);
+      color: white;
+      padding: 15px 25px;
+      border-radius: 8px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    
+    .notification.show {
+      opacity: 1;
+    }
+  </style>
 </head>
 <body>
-  <div class="background-animation"></div>
-  
   <div class="container">
-    <div class="screen active" id="start-screen">
+    <div class="screen" id="start-screen">
       <div class="logo animate__animated animate__bounceIn">
         <div class="logo-icon">📦</div>
-        <h1>CONTAINER AUCTION</h1>
-        <div class="subtitle">Ставь. Выигрывай. Доминируй.</div>
+        <h1>АУКЦИОН КОНТЕЙНЕРОВ</h1>
+        <p>Ставь. Выигрывай. Доминируй.</p>
       </div>
       
-      <div class="input-group animate__animated animate__fadeInUp animate__delay-1s">
-        <input type="text" id="nickname" placeholder="Введите никнейм" maxlength="12" autocomplete="off">
-        <span class="input-border"></span>
+      <div class="input-group">
+        <input type="text" id="nickname" placeholder="Введите ваш никнейм" maxlength="12">
       </div>
       
-      <div class="button-group animate__animated animate__fadeInUp animate__delay-2s">
-        <button id="create-lobby" class="btn-primary pulse">
-          <span class="btn-icon">➕</span>
-          СОЗДАТЬ ЛОББИ
+      <div class="button-group">
+        <button id="create-lobby" class="btn-primary">
+          <span>➕</span> СОЗДАТЬ ЛОББИ
         </button>
         <button id="join-lobby" class="btn-secondary">
-          <span class="btn-icon">👥</span>
-          ПРИСОЕДИНИТЬСЯ
+          <span>👥</span> ПРИСОЕДИНИТЬСЯ
         </button>
       </div>
       
-      <div class="lobby-section animate__animated animate__fadeIn animate__delay-3s">
-        <div class="section-header">
-          <h2>Активные лобби</h2>
-          <button id="refresh-lobbies" class="btn-refresh">🔄</button>
-        </div>
-        <div class="lobby-list" id="lobby-list">
-          <div class="lobby-item">
-            <div class="lobby-info">
-              <span class="lobby-id">#ABC123</span>
-              <span class="lobby-host">Ведущий: ProGamer</span>
-            </div>
-            <div class="lobby-stats">
-              <span class="players-count">👥 3/8</span>
-              <span class="lobby-status">Ожидание...</span>
-            </div>
-            <button class="btn-join">ВОЙТИ</button>
-          </div>
-          
-          <div class="lobby-item">
-            <div class="lobby-info">
-              <span class="lobby-id">#XYZ789</span>
-              <span class="lobby-host">Ведущий: AuctionKing</span>
-            </div>
-            <div class="lobby-stats">
-              <span class="players-count">👥 1/8</span>
-              <span class="lobby-status">Набор игроков</span>
-            </div>
-            <button class="btn-join">ВОЙТИ</button>
-          </div>
-        </div>
+      <div class="lobby-list" id="lobby-list">
+        <!-- Лобби будут загружаться здесь -->
       </div>
     </div>
   </div>
 
   <div class="notification" id="notification"></div>
-  
-  <audio id="hover-sound" src="sounds/hover.mp3" preload="auto"></audio>
-  <audio id="click-sound" src="sounds/click.mp3" preload="auto"></audio>
 
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+  
+  <!-- GSAP для анимаций -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
-  <script src="game.js"></script>
+  
+  <!-- Основной код игры -->
+  <script src="js/game.js"></script>
 </body>
 </html>
