@@ -269,13 +269,17 @@
       border: 1px solid rgba(255, 255, 255, 0.1);
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
       animation: fadeIn 0.8s ease-out 0.6s both;
+      position: relative;
     }
     
     .chat-messages {
-      height: 300px;
+      height: 200px;
       overflow-y: auto;
       margin-bottom: 1.5rem;
       padding-right: 0.5rem;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 10px;
     }
     
     /* Стилизация скроллбара */
@@ -296,14 +300,15 @@
     .message {
       margin-bottom: 1rem;
       padding: 0.8rem 1rem;
-      background: rgba(255, 255, 255, 0.08);
+      background: rgba(0, 0, 0, 0.4);
       border-radius: 10px;
       animation: fadeIn 0.3s ease-out;
       transition: all 0.3s ease;
+      border-left: 3px solid var(--accent);
     }
     
     .message:hover {
-      background: rgba(255, 255, 255, 0.12);
+      background: rgba(0, 0, 0, 0.5);
     }
     
     .message-sender {
@@ -355,6 +360,102 @@
       background: linear-gradient(45deg, var(--primary-dark), var(--primary));
     }
     
+    /* Настройки лобби */
+    .settings-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 350px;
+      height: 100%;
+      background: rgba(26, 26, 46, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 2rem;
+      box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      z-index: 100;
+      overflow-y: auto;
+    }
+    
+    .settings-panel.active {
+      transform: translateX(0);
+    }
+    
+    .settings-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      font-size: 1.2rem;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      z-index: 99;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .settings-toggle:hover {
+      background: var(--primary-dark);
+    }
+    
+    .settings-group {
+      margin-bottom: 1.5rem;
+    }
+    
+    .settings-title {
+      font-size: 1.2rem;
+      color: var(--accent);
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .setting-item {
+      margin-bottom: 1rem;
+    }
+    
+    .setting-label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+    }
+    
+    .setting-input {
+      width: 100%;
+      padding: 0.8rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      color: white;
+    }
+    
+    .setting-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    
+    .save-settings {
+      width: 100%;
+      padding: 1rem;
+      background: var(--success);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 1rem;
+    }
+    
+    .save-settings:hover {
+      background: #3d8b40;
+    }
+    
     /* Анимации */
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(20px); }
@@ -393,6 +494,10 @@
       
       #send-message {
         padding: 1rem;
+      }
+      
+      .settings-panel {
+        width: 100%;
       }
     }
   </style>
@@ -451,6 +556,75 @@
         <button id="send-message"><i class="fas fa-paper-plane"></i></button>
       </div>
     </div>
+  </div>
+  
+  <!-- Кнопка открытия настроек -->
+  <button class="settings-toggle" id="settings-toggle">
+    <i class="fas fa-cog"></i>
+  </button>
+  
+  <!-- Панель настроек лобби -->
+  <div class="settings-panel" id="settings-panel">
+    <h2 class="section-title">
+      <i class="fas fa-sliders-h"></i>
+      <span>Настройки лобби</span>
+    </h2>
+    
+    <div class="settings-group">
+      <h3 class="settings-title">Основные настройки</h3>
+      
+      <div class="setting-item">
+        <label class="setting-label">Максимальное количество игроков</label>
+        <select class="setting-input" id="max-players">
+          <option value="2">2</option>
+          <option value="4" selected>4</option>
+          <option value="6">6</option>
+          <option value="8">8</option>
+          <option value="10">10</option>
+        </select>
+      </div>
+      
+      <div class="setting-item">
+        <label class="setting-label">Начальный капитал ($)</label>
+        <input type="number" class="setting-input" id="start-money" value="10000" min="1000" step="1000">
+      </div>
+      
+      <div class="setting-item">
+        <label class="setting-label">Режим игры</label>
+        <select class="setting-input" id="game-mode">
+          <option value="solo">Одиночный</option>
+          <option value="teams">Командный (2 команды)</option>
+          <option value="teams4">Командный (4 команды)</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="settings-group">
+      <h3 class="settings-title">Дополнительные настройки</h3>
+      
+      <div class="setting-item">
+        <label class="setting-label">
+          <input type="checkbox" id="random-events" checked>
+          Случайные события
+        </label>
+      </div>
+      
+      <div class="setting-item">
+        <label class="setting-label">
+          <input type="checkbox" id="special-containers" checked>
+          Специальные контейнеры
+        </label>
+      </div>
+      
+      <div class="setting-item">
+        <label class="setting-label">
+          <input type="checkbox" id="time-limits" checked>
+          Ограничение времени на ход
+        </label>
+      </div>
+    </div>
+    
+    <button class="save-settings" id="save-settings">Сохранить настройки</button>
   </div>
 
   <!-- Firebase SDK -->
@@ -537,6 +711,7 @@
           }
           
           updateLobbyUI(lobby, user.uid);
+          updateSettingsUI(lobby.settings);
         });
         
         // 3. Настройка чата
@@ -545,7 +720,10 @@
         // 4. Настройка кнопки "Начать игру"
         document.getElementById('start-game').addEventListener('click', startGame);
         
-        // 5. Удаление игрока при выходе
+        // 5. Настройка панели настроек
+        setupSettingsPanel(user.uid);
+        
+        // 6. Удаление игрока при выходе
         db.ref(`lobbies/${lobbyId}/players/${user.uid}`).onDisconnect().remove();
         
       } catch (error) {
@@ -561,7 +739,8 @@
       
       // Обновляем счетчик игроков
       const playerCount = Object.keys(lobby.players || {}).length;
-      document.getElementById('players-count').textContent = `${playerCount}/${lobby.settings.maxPlayers} игроков`;
+      const maxPlayers = lobby.settings?.maxPlayers || 8;
+      document.getElementById('players-count').textContent = `${playerCount}/${maxPlayers} игроков`;
       
       // Обновляем список игроков
       const playersContainer = document.getElementById('players-list');
@@ -693,11 +872,9 @@
         });
         
         messageElement.innerHTML = `
-          <div class="message-header">
-            <span class="message-sender">${message.sender}</span>
-            <span class="message-time">${time}</span>
-          </div>
-          <div class="message-text">${message.text}</div>
+          <span class="message-sender">${message.sender}:</span>
+          <span>${message.text}</span>
+          <span class="message-time">${time}</span>
         `;
         
         // Анимация появления сообщения
@@ -710,6 +887,64 @@
         
         chatMessages.appendChild(messageElement);
       }
+    }
+
+    // Настройка панели настроек
+    function setupSettingsPanel(currentUserId) {
+      const settingsToggle = document.getElementById('settings-toggle');
+      const settingsPanel = document.getElementById('settings-panel');
+      const saveSettingsBtn = document.getElementById('save-settings');
+      
+      // Переключение панели настроек
+      settingsToggle.addEventListener('click', () => {
+        settingsPanel.classList.toggle('active');
+      });
+      
+      // Сохранение настроек
+      saveSettingsBtn.addEventListener('click', async () => {
+        try {
+          // Проверяем, является ли пользователь ведущим
+          const lobbySnapshot = await db.ref(`lobbies/${lobbyId}`).once('value');
+          const lobby = lobbySnapshot.val();
+          
+          if (lobby.host !== currentUserId) {
+            showError("Только ведущий может изменять настройки!");
+            return;
+          }
+          
+          // Получаем значения настроек
+          const settings = {
+            maxPlayers: parseInt(document.getElementById('max-players').value),
+            startMoney: parseInt(document.getElementById('start-money').value),
+            gameMode: document.getElementById('game-mode').value,
+            randomEvents: document.getElementById('random-events').checked,
+            specialContainers: document.getElementById('special-containers').checked,
+            timeLimits: document.getElementById('time-limits').checked
+          };
+          
+          // Сохраняем настройки
+          await db.ref(`lobbies/${lobbyId}/settings`).update(settings);
+          
+          showSuccess("Настройки сохранены!");
+          settingsPanel.classList.remove('active');
+          
+        } catch (error) {
+          showError("Ошибка сохранения настроек");
+          console.error("Ошибка сохранения настроек:", error);
+        }
+      });
+    }
+    
+    // Обновление UI настроек
+    function updateSettingsUI(settings) {
+      if (!settings) return;
+      
+      document.getElementById('max-players').value = settings.maxPlayers || 8;
+      document.getElementById('start-money').value = settings.startMoney || 10000;
+      document.getElementById('game-mode').value = settings.gameMode || 'solo';
+      document.getElementById('random-events').checked = settings.randomEvents !== false;
+      document.getElementById('special-containers').checked = settings.specialContainers !== false;
+      document.getElementById('time-limits').checked = settings.timeLimits !== false;
     }
 
     // Начало игры
@@ -771,6 +1006,35 @@
           onComplete: () => notification.remove()
         });
       }, 5000);
+    }
+    
+    // Показать успешное уведомление
+    function showSuccess(message) {
+      const notification = document.createElement('div');
+      notification.className = 'notification success';
+      notification.innerHTML = `
+        <i class="fas fa-check-circle"></i>
+        <span>${message}</span>
+      `;
+      
+      document.body.appendChild(notification);
+      
+      // Анимация появления
+      gsap.from(notification, {
+        opacity: 0,
+        y: 20,
+        duration: 0.3
+      });
+      
+      // Автоматическое скрытие через 3 секунды
+      setTimeout(() => {
+        gsap.to(notification, {
+          opacity: 0,
+          y: -20,
+          duration: 0.3,
+          onComplete: () => notification.remove()
+        });
+      }, 3000);
     }
 
     // Запускаем приложение
