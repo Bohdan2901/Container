@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Аукцион Контейнеров</title>
   <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
   <style>
     :root {
       --primary: #FF5722;
@@ -113,11 +112,6 @@
       justify-content: space-between;
       align-items: center;
       cursor: pointer;
-      transition: all 0.3s;
-    }
-    
-    .lobby-item:hover {
-      background: rgba(255,255,255,0.2);
     }
     
     .notification {
@@ -132,7 +126,6 @@
       box-shadow: 0 5px 15px rgba(0,0,0,0.3);
       opacity: 0;
       transition: opacity 0.3s;
-      z-index: 1000;
     }
     
     .notification.show {
@@ -150,7 +143,7 @@
       </div>
       
       <div class="input-group">
-        <input type="text" id="nickname" placeholder="Введите ваш никнейм" maxlength="12" autocomplete="off">
+        <input type="text" id="nickname" placeholder="Введите ваш никнейм" maxlength="12">
       </div>
       
       <div class="button-group">
@@ -163,8 +156,7 @@
       </div>
       
       <div class="lobby-list" id="lobby-list">
-        <p id="lobby-status">Загрузка лобби...</p>
-        <!-- Лобби будут загружаться здесь -->
+        <p id="lobby-status">Нажмите "Присоединиться" для загрузки лобби</p>
       </div>
     </div>
   </div>
@@ -177,17 +169,16 @@
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
   
   <script>
-    // Конфигурация Firebase (ЗАМЕНИТЕ НА СВОЮ!)
-  const firebaseConfig = {
-    apiKey: "AIzaSyCJuTuxuPhYxCjZXqMZWJTTmLrgxVkTGBY", // Web API Key
-    authDomain: "container-auction.firebaseapp.com",
-    databaseURL: "https://container-auction.firebaseio.com", // URL базы данных
-    projectId: "container-auction",
-    storageBucket: "container-auction.appspot.com",
-    messagingSenderId: "907236645178",
-    appId: "1:907236645178:web:7d5393a8592fbb81b7c442"
-  };
-
+    // Конфигурация Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJuTuxuPhYxCjZXqMZWJTTmLrgxVkTGBY",
+      authDomain: "container-auction.firebaseapp.com",
+      databaseURL: "https://container-auction-default-rtdb.firebaseio.com",
+      projectId: "container-auction",
+      storageBucket: "container-auction.appspot.com",
+      messagingSenderId: "907236645178",
+      appId: "1:907236645178:web:7d5393a8592fbb81b7c442"
+    };
 
     // Инициализация Firebase
     const app = firebase.initializeApp(firebaseConfig);
@@ -206,27 +197,20 @@
 
     // Состояние приложения
     const state = {
-      currentUser: null,
-      lobbies: []
+      currentUser: null
     };
 
     // Инициализация приложения
     async function initApp() {
       try {
         // Аутентификация пользователя
-        await auth.signInAnonymously();
+        const userCredential = await auth.signInAnonymously();
+        state.currentUser = userCredential.user;
         
-        // Слушаем изменения статуса аутентификации
-        auth.onAuthStateChanged((user) => {
-          if (user) {
-            state.currentUser = user;
-            console.log("Пользователь авторизован:", user.uid);
-            setupEventListeners();
-            loadLobbies();
-          } else {
-            console.log("Пользователь не авторизован");
-          }
-        });
+        console.log("Пользователь авторизован:", state.currentUser.uid);
+        
+        // Настройка обработчиков
+        setupEventListeners();
         
       } catch (error) {
         showNotification("Ошибка инициализации: " + error.message, "error");
@@ -249,10 +233,7 @@
       elements.createLobbyBtn.addEventListener('click', createLobby);
       
       // Показать список лобби
-      elements.joinLobbyBtn.addEventListener('click', () => {
-        elements.lobbyList.style.display = 'block';
-        loadLobbies();
-      });
+      elements.joinLobbyBtn.addEventListener('click', loadLobbies);
     }
 
     // Создание нового лобби
@@ -272,18 +253,19 @@
         };
 
         // Создаем лобби в базе данных
-        const updates = {};
-        updates[`lobbies/${lobbyId}/host`] = state.currentUser.uid;
-        updates[`lobbies/${lobbyId}/players/${state.currentUser.uid}`] = playerData;
-        updates[`lobbies/${lobbyId}/settings`] = {
-          maxPlayers: 8,
-          timer: 30,
-          containers: 10,
+        await db.ref(`lobbies/${lobbyId}`).set({
+          host: state.currentUser.uid,
+          players: {
+            [state.currentUser.uid]: playerData
+          },
+          settings: {
+            maxPlayers: 8,
+            timer: 30,
+            containers: 10
+          },
+          status: "waiting",
           createdAt: firebase.database.ServerValue.TIMESTAMP
-        };
-        updates[`lobbies/${lobbyId}/status`] = "waiting";
-
-        await db.ref().update(updates);
+        });
         
         showNotification(`Лобби #${lobbyId} создано!`);
         setTimeout(() => {
@@ -300,57 +282,46 @@
     async function loadLobbies() {
       try {
         elements.lobbyStatus.textContent = "Загрузка лобби...";
+        elements.lobbyList.innerHTML = '';
         
         const snapshot = await db.ref('lobbies')
           .orderByChild('status')
           .equalTo('waiting')
           .once('value');
         
-        const lobbies = [];
+        if (!snapshot.exists()) {
+          elements.lobbyStatus.textContent = "Нет доступных лобби";
+          return;
+        }
+        
+        elements.lobbyStatus.textContent = "Доступные лобби:";
+        
         snapshot.forEach((childSnapshot) => {
           const lobby = childSnapshot.val();
-          lobby.id = childSnapshot.key;
-          lobbies.push(lobby);
+          const lobbyId = childSnapshot.key;
+          
+          const lobbyItem = document.createElement('div');
+          lobbyItem.className = 'lobby-item';
+          lobbyItem.innerHTML = `
+            <div>
+              <strong>Лобби #${lobbyId}</strong>
+              <p>Игроков: ${Object.keys(lobby.players || {}).length}/${lobby.settings.maxPlayers}</p>
+            </div>
+            <div>Ведущий: ${lobby.players[lobby.host].name}</div>
+          `;
+          
+          lobbyItem.addEventListener('click', () => {
+            joinLobby(lobbyId);
+          });
+          
+          elements.lobbyList.appendChild(lobbyItem);
         });
-        
-        state.lobbies = lobbies;
-        renderLobbies();
         
       } catch (error) {
         elements.lobbyStatus.textContent = "Ошибка загрузки лобби";
         showNotification("Ошибка загрузки лобби: " + error.message, "error");
         console.error("Ошибка загрузки лобби:", error);
       }
-    }
-
-    // Отображение списка лобби
-    function renderLobbies() {
-      elements.lobbyList.innerHTML = '';
-      
-      if (state.lobbies.length === 0) {
-        elements.lobbyStatus.textContent = "Нет доступных лобби. Создайте свое!";
-        return;
-      }
-      
-      elements.lobbyStatus.textContent = "Доступные лобби:";
-      
-      state.lobbies.forEach((lobby) => {
-        const lobbyItem = document.createElement('div');
-        lobbyItem.className = 'lobby-item';
-        lobbyItem.innerHTML = `
-          <div>
-            <strong>Лобби #${lobby.id}</strong>
-            <p>Игроков: ${Object.keys(lobby.players || {}).length}/${lobby.settings.maxPlayers}</p>
-          </div>
-          <div>Ведущий: ${lobby.players[lobby.host]?.name || 'Неизвестно'}</div>
-        `;
-        
-        lobbyItem.addEventListener('click', () => {
-          joinLobby(lobby.id);
-        });
-        
-        elements.lobbyList.appendChild(lobbyItem);
-      });
     }
 
     // Подключение к лобби
@@ -378,13 +349,11 @@
         }
         
         // Добавляем игрока в лобби
-        const playerData = {
+        await db.ref(`lobbies/${lobbyId}/players/${state.currentUser.uid}`).set({
           name: nickname,
           money: 10000,
           isHost: false
-        };
-        
-        await db.ref(`lobbies/${lobbyId}/players/${state.currentUser.uid}`).set(playerData);
+        });
         
         showNotification(`Вы присоединились к лобби #${lobbyId}`);
         setTimeout(() => {
