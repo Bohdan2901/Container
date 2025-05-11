@@ -819,7 +819,7 @@
       chatMessages.innerHTML = '';
       
       // Слушаем новые сообщения
-      chatRef.limitToLast(50).on('child_added', (snapshot) => {
+      chatRef.limitToLast(401000).on('child_added', (snapshot) => {
         const message = snapshot.val();
         displayMessage(message, currentUserId);
         
