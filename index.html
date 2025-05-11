@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>АУКЦИОН КОНТЕЙНЕРОВ | Лобби</title>
+  <title>АУКЦИОН КОНТЕЙНЕРОВ</title>
   <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -36,7 +36,7 @@
     }
     
     .container {
-      max-width: 1200px;
+      max-width: 800px;
       margin: 0 auto;
       padding: 2rem;
       position: relative;
@@ -65,190 +65,112 @@
       100% { transform: translateY(-100vh) rotate(360deg); }
     }
     
-    /* Шапка лобби */
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    /* Логотип и заголовок */
+    .logo {
+      text-align: center;
       margin-bottom: 2rem;
-      padding: 1.5rem;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 16px;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
       animation: fadeInDown 0.8s ease-out;
     }
     
-    .lobby-info {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
+    .logo-icon {
+      font-size: 5rem;
+      display: inline-block;
+      animation: bounce 2s infinite;
+      text-shadow: 0 5px 15px rgba(255, 193, 7, 0.4);
     }
     
-    .lobby-id {
-      font-size: 1.8rem;
-      font-weight: bold;
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-20px); }
+    }
+    
+    h1 {
+      font-size: 2.8rem;
       background: linear-gradient(45deg, var(--accent), var(--primary));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      display: inline-block;
+      margin: 10px 0;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
     }
     
-    .lobby-status {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.9rem;
+    .subtitle {
+      font-size: 1.2rem;
       color: var(--accent-light);
+      margin-bottom: 1rem;
     }
     
-    .status-indicator {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: var(--success);
-      animation: pulse 2s infinite;
-    }
-    
-    @keyframes pulse {
-      0% { transform: scale(0.95); opacity: 0.7; }
-      50% { transform: scale(1.1); opacity: 1; }
-      100% { transform: scale(0.95); opacity: 0.7; }
-    }
-    
-    /* Список игроков */
-    .players-section {
-      margin-bottom: 2rem;
+    /* Форма ввода */
+    .input-group {
+      margin: 2rem auto;
+      max-width: 500px;
       animation: fadeIn 0.8s ease-out 0.2s both;
     }
     
-    .section-title {
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-      margin-bottom: 1.5rem;
-      font-size: 1.5rem;
-      color: var(--accent);
-    }
-    
-    .section-title i {
-      font-size: 1.3rem;
-    }
-    
-    .players-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 1.5rem;
-    }
-    
-    .player-card {
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 12px;
-      padding: 1.5rem;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .player-card:hover {
-      transform: translateY(-5px) scale(1.02);
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-      border-color: var(--accent);
-    }
-    
-    .player-card.host::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
+    #nickname {
       width: 100%;
-      height: 4px;
-      background: linear-gradient(90deg, var(--accent), var(--primary));
-    }
-    
-    .player-card.host::after {
-      content: '👑 Ведущий';
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: rgba(255, 193, 7, 0.2);
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
-      font-size: 0.8rem;
-      color: var(--accent);
-    }
-    
-    .player-avatar {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      background: linear-gradient(45deg, var(--primary), var(--accent));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 1rem;
-      font-size: 1.5rem;
+      padding: 15px 20px;
+      border: 2px solid var(--accent);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.1);
       color: white;
-      transition: all 0.3s ease;
-    }
-    
-    .player-card:hover .player-avatar {
-      transform: rotate(15deg) scale(1.1);
-    }
-    
-    .player-name {
-      font-size: 1.2rem;
-      font-weight: bold;
-      margin-bottom: 0.5rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 100%;
-    }
-    
-    .player-money {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      color: var(--accent-light);
-      font-weight: bold;
-    }
-    
-    /* Кнопка начала игры */
-    .start-game-btn {
-      display: block;
-      margin: 2rem auto;
-      padding: 1.2rem 2.5rem;
-      background: linear-gradient(45deg, var(--primary), var(--primary-dark));
-      color: white;
-      border: none;
-      border-radius: 50px;
       font-size: 1.1rem;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+    
+    #nickname:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 87, 34, 0.3);
+      transform: scale(1.02);
+    }
+    
+    /* Кнопки */
+    .button-group {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin: 2rem 0;
+      animation: fadeIn 0.8s ease-out 0.4s both;
+    }
+    
+    button {
+      padding: 15px 30px;
+      border: none;
+      border-radius: 12px;
       font-weight: bold;
       cursor: pointer;
       transition: all 0.3s ease;
-      box-shadow: 0 4px 15px rgba(229, 74, 25, 0.4);
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
       position: relative;
       overflow: hidden;
-      animation: fadeInUp 0.8s ease-out 0.4s both;
     }
     
-    .start-game-btn:hover {
+    .btn-primary {
+      background: linear-gradient(45deg, var(--primary), var(--primary-dark));
+      color: white;
+      box-shadow: 0 5px 15px rgba(229, 74, 25, 0.4);
+    }
+    
+    .btn-secondary {
+      background: linear-gradient(45deg, var(--secondary), #455A64);
+      color: white;
+      box-shadow: 0 5px 15px rgba(69, 90, 100, 0.4);
+    }
+    
+    button:hover {
       transform: translateY(-3px) scale(1.05);
-      box-shadow: 0 8px 25px rgba(229, 74, 25, 0.6);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
     }
     
-    .start-game-btn:active {
+    button:active {
       transform: translateY(1px);
     }
     
-    .start-game-btn::after {
+    button::after {
       content: '';
       position: absolute;
       top: 0;
@@ -265,109 +187,66 @@
       transition: transform 0.6s ease;
     }
     
-    .start-game-btn:hover::after {
+    button:hover::after {
       transform: translateX(100%);
     }
     
-    /* Чат лобби */
-    .chat-container {
+    /* Список лобби */
+    .lobby-list {
+      margin-top: 2rem;
       background: rgba(255, 255, 255, 0.05);
+      padding: 20px;
       border-radius: 16px;
-      padding: 1.5rem;
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.1);
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
       animation: fadeIn 0.8s ease-out 0.6s both;
     }
     
-    .chat-messages {
-      height: 300px;
-      overflow-y: auto;
-      margin-bottom: 1.5rem;
-      padding-right: 0.5rem;
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 8px;
-      padding: 15px;
-    }
-    
-    /* Стилизация скроллбара */
-    .chat-messages::-webkit-scrollbar {
-      width: 6px;
-    }
-    
-    .chat-messages::-webkit-scrollbar-track {
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 3px;
-    }
-    
-    .chat-messages::-webkit-scrollbar-thumb {
-      background: var(--accent);
-      border-radius: 3px;
-    }
-    
-    .message {
+    #lobby-status {
+      text-align: center;
+      color: var(--accent-light);
       margin-bottom: 1rem;
-      padding: 0.8rem 1rem;
-      background: rgba(0, 0, 0, 0.4);
+    }
+    
+    .lobby-item {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 15px 20px;
+      margin: 15px 0;
       border-radius: 10px;
-      animation: fadeIn 0.3s ease-out;
-      transition: all 0.3s ease;
-      border-left: 3px solid var(--accent);
-    }
-    
-    .message:hover {
-      background: rgba(0, 0, 0, 0.5);
-      transform: translateX(5px);
-    }
-    
-    .message-sender {
-      font-weight: bold;
-      color: var(--accent);
-      margin-right: 0.5rem;
-    }
-    
-    .message-time {
-      font-size: 0.8rem;
-      color: rgba(255, 255, 255, 0.5);
-      margin-left: 0.5rem;
-    }
-    
-    .chat-input-container {
       display: flex;
-      gap: 1rem;
-    }
-    
-    #chat-input {
-      flex: 1;
-      padding: 1rem;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-      color: white;
-      font-size: 1rem;
-      transition: all 0.3s ease;
-    }
-    
-    #chat-input:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.2);
-    }
-    
-    #send-message {
-      padding: 0 1.5rem;
-      background: linear-gradient(45deg, var(--primary), var(--primary-dark));
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-size: 1rem;
+      justify-content: space-between;
+      align-items: center;
       cursor: pointer;
       transition: all 0.3s ease;
+      border-left: 4px solid var(--accent);
     }
     
-    #send-message:hover {
-      background: linear-gradient(45deg, var(--primary-dark), var(--primary));
-      transform: scale(1.05);
+    .lobby-item:hover {
+      transform: translateX(10px);
+      background: rgba(255, 255, 255, 0.15);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .lobby-info {
+      flex: 1;
+    }
+    
+    .lobby-id {
+      font-weight: bold;
+      font-size: 1.2rem;
+      color: var(--accent);
+    }
+    
+    .lobby-players {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .lobby-host {
+      font-size: 0.9rem;
+      color: var(--accent-light);
+      text-align: right;
     }
     
     /* Уведомления */
@@ -378,17 +257,28 @@
       transform: translateX(-50%);
       background: var(--primary);
       color: white;
-      padding: 15px 25px;
-      border-radius: 8px;
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      padding: 15px 30px;
+      border-radius: 50px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
       z-index: 100;
       opacity: 0;
       transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
     
     .notification.show {
       opacity: 1;
       bottom: 30px;
+    }
+    
+    .notification.error {
+      background: var(--error);
+    }
+    
+    .notification.success {
+      background: var(--success);
     }
     
     /* Анимации */
@@ -402,33 +292,38 @@
       to { opacity: 1; transform: translateY(0); }
     }
     
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
     /* Адаптивность */
     @media (max-width: 768px) {
       .container {
-        padding: 1rem;
+        padding: 1.5rem;
       }
       
-      .players-grid {
-        grid-template-columns: 1fr;
+      .logo-icon {
+        font-size: 4rem;
       }
       
-      .header {
+      h1 {
+        font-size: 2rem;
+      }
+      
+      .button-group {
         flex-direction: column;
-        gap: 1rem;
-        text-align: center;
+        gap: 15px;
       }
       
-      .chat-input-container {
+      button {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .lobby-item {
         flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
       }
       
-      #send-message {
-        padding: 1rem;
+      .lobby-host {
+        text-align: left;
       }
     }
   </style>
@@ -438,58 +333,33 @@
   <div class="particles" id="particles"></div>
   
   <div class="container">
-    <!-- Шапка лобби -->
-    <div class="header">
-      <div class="lobby-info">
-        <h1>Лобби аукциона</h1>
-        <div>
-          <span class="lobby-id" id="lobby-id">#Загрузка...</span>
-          <span class="lobby-status">
-            <span class="status-indicator"></span>
-            <span id="lobby-status-text">Ожидание игроков</span>
-          </span>
-        </div>
+    <div class="screen" id="start-screen">
+      <div class="logo">
+        <div class="logo-icon">📦</div>
+        <h1>АУКЦИОН КОНТЕЙНЕРОВ</h1>
+        <p class="subtitle">Ставь. Выигрывай. Доминируй.</p>
       </div>
-      <div id="players-count">0/8 игроков</div>
-    </div>
-    
-    <!-- Список игроков -->
-    <div class="players-section">
-      <h2 class="section-title">
-        <i class="fas fa-users"></i>
-        <span>Участники</span>
-      </h2>
-      <div class="players-grid" id="players-list">
-        <!-- Игроки будут добавляться здесь -->
+      
+      <div class="input-group">
+        <input type="text" id="nickname" placeholder="Введите ваш никнейм (2-30 символов)" maxlength="30">
       </div>
-    </div>
-    
-    <!-- Кнопка начала игры -->
-    <button class="start-btn start-game-btn" id="start-game" style="display: none;">
-      <i class="fas fa-play"></i> НАЧАТЬ ИГРУ
-    </button>
-    
-    <!-- Чат лобби -->
-    <div class="chat-container">
-      <h2 class="section-title">
-        <i class="fas fa-comments"></i>
-        <span>Чат лобби</span>
-      </h2>
-      <div class="chat-messages" id="chat-messages">
-        <div class="message">
-          <span class="message-sender">Система:</span>
-          <span>Добро пожаловать в лобби!</span>
-          <span class="message-time">12:00</span>
-        </div>
+      
+      <div class="button-group">
+        <button id="create-lobby" class="btn-primary" disabled>
+          <i class="fas fa-plus"></i> СОЗДАТЬ ЛОББИ
+        </button>
+        <button id="join-lobby" class="btn-secondary" disabled>
+          <i class="fas fa-users"></i> ПРИСОЕДИНИТЬСЯ
+        </button>
       </div>
-      <div class="chat-input-container">
-        <input type="text" id="chat-input" placeholder="Напишите сообщение..." maxlength="100">
-        <button id="send-message"><i class="fas fa-paper-plane"></i></button>
+      
+      <div class="lobby-list" id="lobby-list">
+        <p id="lobby-status">Нажмите "Присоединиться" для загрузки лобби</p>
+        <!-- Лобби будут добавляться здесь -->
       </div>
     </div>
   </div>
 
-  <!-- Уведомления -->
   <div class="notification" id="notification"></div>
 
   <!-- Firebase SDK -->
@@ -517,15 +387,46 @@
     const db = firebase.database();
     const auth = firebase.auth();
 
-    // Получаем ID лобби из URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const lobbyId = urlParams.get('id');
-    
-    if (!lobbyId) {
-      showNotification("Ошибка: не указан ID лобби!", "error");
-      setTimeout(() => {
-        window.location.href = 'index.html';
-      }, 2000);
+    // Элементы интерфейса
+    const elements = {
+      nicknameInput: document.getElementById('nickname'),
+      createLobbyBtn: document.getElementById('create-lobby'),
+      joinLobbyBtn: document.getElementById('join-lobby'),
+      lobbyList: document.getElementById('lobby-list'),
+      lobbyStatus: document.getElementById('lobby-status'),
+      notification: document.getElementById('notification')
+    };
+
+    // Состояние приложения
+    const state = {
+      currentUser: null,
+      nickname: ""
+    };
+
+    // Инициализация приложения
+    async function initApp() {
+      // Создаем частицы фона
+      createParticles();
+      
+      try {
+        // Аутентификация пользователя
+        const userCredential = await auth.signInAnonymously();
+        state.currentUser = userCredential.user;
+        
+        // Загружаем сохраненный никнейм
+        state.nickname = localStorage.getItem('auction_nickname') || "";
+        if (state.nickname) {
+          elements.nicknameInput.value = state.nickname;
+          updateButtonsState();
+        }
+        
+        // Настройка обработчиков
+        setupEventListeners();
+        
+      } catch (error) {
+        showNotification("Ошибка инициализации: " + error.message, "error");
+        console.error("Ошибка инициализации:", error);
+      }
     }
 
     // Создаем частицы фона
@@ -554,258 +455,214 @@
       }
     }
 
-    // Основная функция инициализации
-    async function initLobby() {
-      // Создаем частицы фона
-      createParticles();
+    // Настройка обработчиков событий
+    function setupEventListeners() {
+      // Ввод ника
+      elements.nicknameInput.addEventListener('input', () => {
+        state.nickname = elements.nicknameInput.value.trim();
+        localStorage.setItem('auction_nickname', state.nickname);
+        updateButtonsState();
+      });
+
+      // Создание лобби
+      elements.createLobbyBtn.addEventListener('click', createLobby);
       
+      // Показать список лобби
+      elements.joinLobbyBtn.addEventListener('click', loadLobbies);
+    }
+
+    // Обновление состояния кнопок
+    function updateButtonsState() {
+      const isValid = state.nickname.length >= 2 && state.nickname.length <= 30;
+      elements.createLobbyBtn.disabled = !isValid;
+      elements.joinLobbyBtn.disabled = !isValid;
+    }
+
+    // Создание нового лобби
+    async function createLobby() {
+      if (!validateNickname()) return;
+
       try {
-        // 1. Аутентификация
-        const userCredential = await auth.signInAnonymously();
-        const user = userCredential.user;
-        
-        // 2. Получаем никнейм из localStorage или запрашиваем
-        let nickname = localStorage.getItem('auction_nickname');
-        if (!nickname) {
-          nickname = `Игрок${Math.floor(Math.random() * 1000)}`;
-          localStorage.setItem('auction_nickname', nickname);
-        }
-        
-        // 3. Загрузка данных лобби
-        const lobbyRef = db.ref(`lobbies/${lobbyId}`);
-        lobbyRef.on('value', (snapshot) => {
-          const lobby = snapshot.val();
-          
-          if (!lobby) {
-            showNotification("Лобби не найдено!", "error");
-            setTimeout(() => {
-              window.location.href = 'index.html';
-            }, 2000);
-            return;
-          }
-          
-          // Добавляем/обновляем игрока в лобби
-          db.ref(`lobbies/${lobbyId}/players/${user.uid}`).set({
-            name: nickname,
-            money: 10000,
-            isHost: lobby.host === user.uid
-          });
-          
-          updateLobbyUI(lobby, user.uid);
-        });
-        
-        // 4. Настройка чата
-        setupChat(user.uid, nickname);
-        
-        // 5. Настройка кнопки "Начать игру"
-        document.getElementById('start-game').addEventListener('click', startGame);
-        
-        // 6. Удаление игрока при выходе
-        db.ref(`lobbies/${lobbyId}/players/${user.uid}`).onDisconnect().remove();
-        
-      } catch (error) {
-        showNotification("Ошибка инициализации: " + error.message, "error");
-        console.error("Ошибка инициализации:", error);
-      }
-    }
+        const lobbyId = generateLobbyId();
+        const playerData = {
+          name: state.nickname,
+          money: 10000,
+          isHost: true
+        };
 
-    // Обновление интерфейса лобби
-    function updateLobbyUI(lobby, currentUserId) {
-      // Обновляем заголовок
-      document.getElementById('lobby-id').textContent = `#${lobbyId}`;
-      
-      // Обновляем статус лобби
-      if (lobby.status === "starting") {
-        document.getElementById('lobby-status-text').textContent = "Игра начинается...";
-        document.querySelector('.status-indicator').style.background = "var(--accent)";
-      }
-      
-      // Обновляем счетчик игроков
-      const playerCount = Object.keys(lobby.players || {}).length;
-      const maxPlayers = lobby.settings?.maxPlayers || 8;
-      document.getElementById('players-count').textContent = `${playerCount}/${maxPlayers} игроков`;
-      
-      // Обновляем список игроков
-      const playersContainer = document.getElementById('players-list');
-      playersContainer.innerHTML = '';
-      
-      if (!lobby.players || playerCount === 0) {
-        playersContainer.innerHTML = '<p class="empty-message">Нет игроков в лобби</p>';
-        return;
-      }
-      
-      // Сортируем игроков: ведущий первый, затем остальные
-      const sortedPlayers = Object.entries(lobby.players).sort((a, b) => {
-        if (a[1].isHost) return -1;
-        if (b[1].isHost) return 1;
-        return 0;
-      });
-      
-      sortedPlayers.forEach(([id, player]) => {
-        const playerCard = document.createElement('div');
-        playerCard.className = `player-card ${player.isHost ? 'host' : ''} ${id === currentUserId ? 'current-user' : ''}`;
-        
-        // Генерация аватарки по первой букве имени
-        const firstLetter = player.name ? player.name.charAt(0).toUpperCase() : '?';
-        const avatarColors = ['#FF5722', '#2196F3', '#4CAF50', '#9C27B0', '#607D8B'];
-        const randomColor = avatarColors[Math.floor(Math.random() * avatarColors.length)];
-        
-        playerCard.innerHTML = `
-          <div class="player-avatar" style="background: ${randomColor}">${firstLetter}</div>
-          <h3 class="player-name">
-            ${player.name || 'Без имени'}
-            ${id === currentUserId ? '<span class="you-badge">(Вы)</span>' : ''}
-          </h3>
-          <div class="player-money">
-            <i class="fas fa-coins"></i>
-            <span>${player.money?.toLocaleString() || '0'} $</span>
-          </div>
-        `;
-        
-        // Анимация появления карточки
-        gsap.from(playerCard, {
-          opacity: 0,
-          y: 20,
-          duration: 0.5,
-          ease: "back.out"
+        // Создаем лобби в базе данных
+        await db.ref(`lobbies/${lobbyId}`).set({
+          host: state.currentUser.uid,
+          players: {
+            [state.currentUser.uid]: playerData
+          },
+          settings: {
+            maxPlayers: 8,
+            startMoney: 10000,
+            timer: 30,
+            containers: 10,
+            gameMode: "solo"
+          },
+          status: "waiting",
+          createdAt: firebase.database.ServerValue.TIMESTAMP
         });
         
-        playersContainer.appendChild(playerCard);
-      });
-      
-      // Показываем кнопку "Начать игру" только для ведущего
-      const startBtn = document.getElementById('start-game');
-      if (lobby.host === currentUserId) {
-        startBtn.style.display = 'block';
-        gsap.from(startBtn, {
-          opacity: 0,
-          y: 30,
-          duration: 0.8,
-          ease: "elastic.out(1, 0.5)",
-          delay: 0.3
-        });
-      } else {
-        startBtn.style.display = 'none';
-      }
-    }
-
-    // Настройка чата
-    function setupChat(currentUserId, nickname) {
-      const chatRef = db.ref(`chats/${lobbyId}`);
-      const chatInput = document.getElementById('chat-input');
-      const sendButton = document.getElementById('send-message');
-      const chatMessages = document.getElementById('chat-messages');
-      
-      // Разблокируем поле ввода
-      chatInput.disabled = false;
-      sendButton.disabled = false;
-      chatMessages.innerHTML = '';
-      
-      // Слушаем новые сообщения
-      chatRef.limitToLast(50).on('child_added', (snapshot) => {
-        const message = snapshot.val();
-        displayMessage(message, currentUserId);
+        showNotification(`Лобби #${lobbyId} создано!`, "success");
         
-        // Плавная прокрутка вниз
-        setTimeout(() => {
-          chatMessages.scrollTo({
-            top: chatMessages.scrollHeight,
-            behavior: 'smooth'
-          });
-        }, 100);
-      });
-      
-      // Отправка сообщения
-      sendButton.addEventListener('click', sendMessage);
-      chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
-      });
-      
-      async function sendMessage() {
-        const text = chatInput.value.trim();
-        if (!text) return;
-        
-        try {
-          // Отправляем сообщение
-          await chatRef.push({
-            sender: nickname || 'Аноним',
-            senderId: currentUserId,
-            text: text,
-            timestamp: firebase.database.ServerValue.TIMESTAMP
-          });
-          
-          // Очищаем поле ввода
-          chatInput.value = '';
-          
-        } catch (error) {
-          showNotification("Ошибка отправки сообщения", "error");
-          console.error("Ошибка отправки сообщения:", error);
-        }
-      }
-      
-      function displayMessage(message, currentUserId) {
-        const messageElement = document.createElement('div');
-        messageElement.className = `message ${message.senderId === currentUserId ? 'own-message' : ''}`;
-        
-        const time = new Date(message.timestamp).toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit'
-        });
-        
-        messageElement.innerHTML = `
-          <span class="message-sender">${message.sender}:</span>
-          <span>${message.text}</span>
-          <span class="message-time">${time}</span>
-        `;
-        
-        // Анимация появления сообщения
-        gsap.from(messageElement, {
-          opacity: 0,
-          y: 10,
-          duration: 0.3,
-          ease: "power1.out"
-        });
-        
-        chatMessages.appendChild(messageElement);
-      }
-    }
-
-    // Начало игры
-    async function startGame() {
-      const startBtn = document.getElementById('start-game');
-      startBtn.disabled = true;
-      startBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Запуск игры...';
-      
-      try {
-        // Обновляем статус лобби
-        await db.ref(`lobbies/${lobbyId}`).update({
-          status: "starting",
-          startTime: firebase.database.ServerValue.TIMESTAMP
-        });
-        
-        // Анимация перехода
+        // Анимация перед переходом
         gsap.to(".container", {
           opacity: 0,
           y: -50,
           duration: 0.5,
           onComplete: () => {
-            window.location.href = `game.html?id=${lobbyId}`;
+            window.location.href = `lobby.html?id=${lobbyId}`;
           }
         });
         
       } catch (error) {
-        showNotification("Ошибка при запуске игры", "error");
-        console.error("Ошибка при запуске игры:", error);
-        
-        startBtn.disabled = false;
-        startBtn.innerHTML = '<i class="fas fa-play"></i> НАЧАТЬ ИГРУ';
+        showNotification("Ошибка при создании лобби: " + error.message, "error");
+        console.error("Ошибка при создании лобби:", error);
       }
+    }
+
+    // Загрузка списка лобби
+    async function loadLobbies() {
+      if (!validateNickname()) return;
+
+      try {
+        elements.lobbyStatus.textContent = "Загрузка лобби...";
+        elements.lobbyList.innerHTML = '';
+        
+        const snapshot = await db.ref('lobbies')
+          .orderByChild('status')
+          .equalTo('waiting')
+          .once('value');
+        
+        if (!snapshot.exists()) {
+          elements.lobbyStatus.textContent = "Нет доступных лобби";
+          return;
+        }
+        
+        elements.lobbyStatus.textContent = "Доступные лобби:";
+        
+        const lobbies = [];
+        
+        snapshot.forEach((childSnapshot) => {
+          const lobby = childSnapshot.val();
+          const lobbyId = childSnapshot.key;
+          
+          // Проверяем что лобби не заполнено
+          if (Object.keys(lobby.players || {}).length < (lobby.settings?.maxPlayers || 8)) {
+            lobbies.push({
+              id: lobbyId,
+              ...lobby
+            });
+          }
+        });
+        
+        if (lobbies.length === 0) {
+          elements.lobbyStatus.textContent = "Нет доступных лобби";
+          return;
+        }
+        
+        // Сортируем лобби по дате создания (новые сверху)
+        lobbies.sort((a, b) => b.createdAt - a.createdAt);
+        
+        // Отображаем лобби
+        lobbies.forEach(lobby => {
+          const hostName = lobby.players[lobby.host]?.name || "Неизвестно";
+          const playerCount = Object.keys(lobby.players || {}).length;
+          const maxPlayers = lobby.settings?.maxPlayers || 8;
+          
+          const lobbyItem = document.createElement('div');
+          lobbyItem.className = 'lobby-item';
+          lobbyItem.innerHTML = `
+            <div class="lobby-info">
+              <div class="lobby-id">Лобби #${lobby.id}</div>
+              <div class="lobby-players">Игроков: ${playerCount}/${maxPlayers}</div>
+            </div>
+            <div class="lobby-host">Ведущий: ${hostName}</div>
+          `;
+          
+          lobbyItem.addEventListener('click', () => {
+            joinLobby(lobby.id);
+          });
+          
+          // Анимация появления
+          gsap.from(lobbyItem, {
+            opacity: 0,
+            x: -20,
+            duration: 0.3
+          });
+          
+          elements.lobbyList.appendChild(lobbyItem);
+        });
+        
+      } catch (error) {
+        elements.lobbyStatus.textContent = "Ошибка загрузки лобби";
+        showNotification("Ошибка загрузки лобби: " + error.message, "error");
+        console.error("Ошибка загрузки лобби:", error);
+      }
+    }
+
+    // Подключение к лобби
+    async function joinLobby(lobbyId) {
+      if (!validateNickname()) return;
+
+      try {
+        // Проверяем существует ли лобби
+        const lobbySnapshot = await db.ref(`lobbies/${lobbyId}`).once('value');
+        const lobby = lobbySnapshot.val();
+        
+        if (!lobby) {
+          showNotification("Лобби не найдено!", "error");
+          return;
+        }
+        
+        // Проверяем есть ли место в лобби
+        if (Object.keys(lobby.players || {}).length >= (lobby.settings?.maxPlayers || 8)) {
+          showNotification("Лобби заполнено!", "error");
+          return;
+        }
+        
+        // Добавляем игрока в лобби
+        await db.ref(`lobbies/${lobbyId}/players/${state.currentUser.uid}`).set({
+          name: state.nickname,
+          money: lobby.settings?.startMoney || 10000,
+          isHost: false
+        });
+        
+        showNotification(`Вы присоединились к лобби #${lobbyId}`, "success");
+        
+        // Анимация перед переходом
+        gsap.to(".container", {
+          opacity: 0,
+          y: -50,
+          duration: 0.5,
+          onComplete: () => {
+            window.location.href = `lobby.html?id=${lobbyId}`;
+          }
+        });
+        
+      } catch (error) {
+        showNotification("Ошибка при подключении: " + error.message, "error");
+        console.error("Ошибка при подключении:", error);
+      }
+    }
+
+    // Валидация никнейма
+    function validateNickname() {
+      if (!state.nickname || state.nickname.length < 2 || state.nickname.length > 30) {
+        showNotification("Никнейм должен быть от 2 до 30 символов", "error");
+        return false;
+      }
+      return true;
     }
 
     // Показать уведомление
     function showNotification(message, type = "success") {
-      const notification = document.getElementById('notification');
-      notification.textContent = message;
+      const notification = elements.notification;
+      notification.innerHTML = `<i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'check-circle'}"></i> ${message}`;
       notification.className = `notification ${type} show`;
       
       setTimeout(() => {
@@ -813,8 +670,18 @@
       }, 3000);
     }
 
-    // Запускаем приложение
-    document.addEventListener('DOMContentLoaded', initLobby);
+    // Генератор ID лобби
+    function generateLobbyId() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let result = '';
+      for (let i = 0; i < 6; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
+    }
+
+    // Запуск приложения
+    document.addEventListener('DOMContentLoaded', initApp);
   </script>
 </body>
 </html>
