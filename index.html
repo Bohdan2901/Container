@@ -1,51 +1,44 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Регистрация</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Аукцион Контейнеров</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Добро пожаловать на регистрацию!</h1>
-        <button id="familyBtn">Регистрация в семью</button>
-        <button id="barygaBtn">Регистрация в барыги</button>
-        
-        <!-- Форма регистрации в семью -->
-        <div id="familyForm" class="form-container hidden">
-            <h2>Форма регистрации в семью</h2>
-            <input type="text" id="familyNickname" placeholder="Ник в игре">
-            <textarea id="familyHistory" placeholder="История ников"></textarea>
-            <textarea id="familyPunishHistory" placeholder="История наказаний"></textarea>
-            <input type="text" id="familyUID" placeholder="Ваш UID">
-            <textarea id="familyAssets" placeholder="Оценка имущества и доказательства (скриншоты)"></textarea>
-            <textarea id="familyFriends" placeholder="Есть ли знакомые в семье (никнеймы)"></textarea>
-            <input type="number" id="familyAge" placeholder="Ваш возраст">
-            <textarea id="familyReputation" placeholder="Репутация на сервере"></textarea>
-            <textarea id="familyCS" placeholder="Наличие ЧСП/ЧСС (если есть, укажите причину и сервер)"></textarea>
-            <textarea id="familyBans" placeholder="Баны за ИЗП (использование запрещённых программ, сервер, использованный чит)"></textarea>
-            <textarea id="familyReason" placeholder="Почему хотите в эту семью?"></textarea>
-            <button id="submitFamily">Отправить заявку</button>
-            <div id="familyConfirmation" class="confirmation-message">Заявка отправлена!</div>
-        </div>
+  <!-- Стартовый экран -->
+  <div id="start-screen" class="screen">
+    <h1>🎁 АУКЦИОН КОНТЕЙНЕРОВ</h1>
+    <p>Собери команду и выиграй главный приз!</p>
+    <button id="start-btn">СТАРТ</button>
+  </div>
 
-        <!-- Форма регистрации в барыги -->
-        <div id="barygaForm" class="form-container hidden">
-            <h2>Форма регистрации в барыги</h2>
-            <input type="text" id="barygaNickname" placeholder="Ник в игре">
-            <textarea id="barygaBusiness" placeholder="Ваши бизнесы и достижения"></textarea>
-            <textarea id="barygaPunishHistory" placeholder="История наказаний"></textarea>
-            <input type="text" id="barygaUID" placeholder="Ваш UID">
-            <textarea id="barygaReputation" placeholder="Репутация на сервере"></textarea>
-            <textarea id="barygaCS" placeholder="Наличие ЧСП/ЧСС (если есть, укажите причину и сервер)"></textarea>
-            <textarea id="barygaBans" placeholder="Баны за ИЗП (использование запрещённых программ, сервер, использованный чит)"></textarea>
-            <textarea id="barygaReason" placeholder="Почему хотите стать барыгой?"></textarea>
-            <button id="submitBaryga">Отправить заявку</button>
-            <div id="barygaConfirmation" class="confirmation-message">Заявка отправлена!</div>
-        </div>
+  <!-- Лобби -->
+  <div id="lobby-screen" class="screen hidden">
+    <h2>КОМНАТА #<span id="room-id">1</span></h2>
+    <div id="players-list">
+      <!-- Игроки добавляются через JS -->
     </div>
+    <button id="start-auction-btn">НАЧАТЬ АУКЦИОН</button>
+  </div>
 
-    <script src="script.js"></script>
+  <!-- Аукцион -->
+  <div id="auction-screen" class="screen hidden">
+    <h2>КОНТЕЙНЕР #<span id="container-number">1</span></h2>
+    <div class="timer">⏳ Осталось: <span id="timer">10</span> сек</div>
+    <div class="current-bid">💰 Текущая ставка: $<span id="current-bid">0</span></div>
+    <input type="number" id="bid-input" placeholder="Ваша ставка">
+    <button id="bid-btn">СТАВИТЬ</button>
+  </div>
+
+  <!-- Результаты -->
+  <div id="results-screen" class="screen hidden">
+    <h2>🏆 ИГРА ОКОНЧЕНА!</h2>
+    <div id="winner-info"></div>
+    <button id="restart-btn">ИГРАТЬ СНОВА</button>
+  </div>
+
+  <script src="game.js"></script>
 </body>
 </html>
