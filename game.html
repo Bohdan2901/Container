@@ -1,1 +1,268 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Аукцион | Аукцион Контейнеров</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #FF5722;
+      --secondary: #607D8B;
+      --accent: #FFC107;
+      --dark: #263238;
+      --light: #ECEFF1;
+    }
+    
+    body {
+      font-family: 'Rubik', sans-serif;
+      background-color: var(--dark);
+      color: var(--light);
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    .container-image {
+      width: 300px;
+      height: 300px;
+      margin: 20px auto;
+      background: url('container.png') no-repeat center;
+      background-size: contain;
+      position: relative;
+    }
+    
+    .timer {
+      font-size: 2rem;
+      margin: 20px 0;
+      color: var(--accent);
+    }
+    
+    .bid-panel {
+      background: rgba(255,255,255,0.1);
+      padding: 20px;
+      border-radius: 10px;
+      margin: 20px 0;
+    }
+    
+    .current-bid {
+      font-size: 1.5rem;
+      margin: 10px 0;
+    }
+    
+    .bid-form {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    
+    .bid-form input {
+      padding: 10px;
+      font-size: 16px;
+      width: 100px;
+    }
+    
+    .bid-form button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    
+    .players-money {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Аукцион Контейнеров</h1>
+    <div id="lobby-info">Лобби #ABCD12 | Контейнер 1/10</div>
+    
+    <div class="container-image" id="container-image"></div>
+    
+    <div class="timer" id="timer">30</div>
+    
+    <div class="bid-panel">
+      <div class="current-bid" id="current-bid">
+        Текущая ставка: $0 (Игрок1)
+      </div>
+      
+      <div class="bid-form">
+        <input type="number" id="bid-amount" placeholder="Сумма">
+        <button id="place-bid">СДЕЛАТЬ СТАВКУ</button>
+      </div>
+    </div>
+    
+    <div class="players-money" id="players-money">
+      <!-- Информация о деньгах игроков -->
+    </div>
+  </div>
 
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+  
+  <script>
+    // Инициализация Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJuTuxuPhYxCjZXqMZWJTTmLrgxVkTGBY",
+      databaseURL: "https://container-auction.firebaseio.com",
+    };
+    firebase.initializeApp(firebaseConfig);
+    
+    const db = firebase.database();
+    const lobbyId = new URLSearchParams(window.location.search).get('id');
+    let currentContainer = 1;
+    let timer = 30;
+    let timerInterval;
+    
+    // Загрузка данных игры
+    function loadGame() {
+      // Слушаем изменения в текущем контейнере
+      db.ref(`containers/${lobbyId}/current`).on('value', (snapshot) => {
+        const container = snapshot.val();
+        updateBidInfo(container);
+      });
+      
+      // Слушаем изменения в данных игроков
+      db.ref(`lobbies/${lobbyId}/players`).on('value', (snapshot) => {
+        renderPlayersMoney(snapshot.val());
+      });
+      
+      // Запускаем таймер
+      startTimer();
+    }
+    
+    // Обновление информации о ставке
+    function updateBidInfo(container) {
+      document.getElementById('current-bid').textContent = 
+        `Текущая ставка: $${container.topBid || 0} (${container.topBidderName || 'Нет'})`;
+    }
+    
+    // Отображение денег игроков
+    function renderPlayersMoney(players) {
+      const container = document.getElementById('players-money');
+      container.innerHTML = '';
+      
+      for (const [id, player] of Object.entries(players)) {
+        const playerEl = document.createElement('div');
+        playerEl.innerHTML = `
+          <strong>${player.name}</strong>
+          <p>$${player.money.toLocaleString()}</p>
+        `;
+        container.appendChild(playerEl);
+      }
+    }
+    
+    // Таймер аукциона
+    function startTimer() {
+      clearInterval(timerInterval);
+      timer = 30;
+      
+      timerInterval = setInterval(() => {
+        timer--;
+        document.getElementById('timer').textContent = timer;
+        
+        if (timer <= 0) {
+          clearInterval(timerInterval);
+          endBidding();
+        }
+      }, 1000);
+    }
+    
+    // Завершение торгов
+    function endBidding() {
+      db.ref(`containers/${lobbyId}/current`).once('value').then(snapshot => {
+        const container = snapshot.val();
+        
+        // Определяем победителя
+        if (container.topBidder) {
+          // Обновляем деньги победителя
+          db.ref(`lobbies/${lobbyId}/players/${container.topBidder}/money`)
+            .transaction(money => money - container.topBid);
+          
+          // Открываем контейнер
+          openContainer(container);
+        } else {
+          // Если ставок не было, переходим к следующему контейнеру
+          nextContainer();
+        }
+      });
+    }
+    
+    // Открытие контейнера (анимация)
+    function openContainer(container) {
+      // Здесь должна быть анимация открытия
+      setTimeout(() => {
+        showContainerItems(container);
+      }, 2000);
+    }
+    
+    // Показ содержимого контейнера
+    function showContainerItems(container) {
+      alert(`В контейнере: ${JSON.stringify(container.items)}`);
+      nextContainer();
+    }
+    
+    // Следующий контейнер
+    function nextContainer() {
+      currentContainer++;
+      db.ref(`lobbies/${lobbyId}`).once('value').then(snapshot => {
+        const lobby = snapshot.val();
+        
+        if (currentContainer > lobby.settings.containers) {
+          // Игра окончена
+          window.location.href = `endgame.html?id=${lobbyId}`;
+        } else {
+          // Начинаем новый раунд
+          startNewRound();
+        }
+      });
+    }
+    
+    // Новая ставка
+    document.getElementById('place-bid').addEventListener('click', () => {
+      const bidAmount = parseInt(document.getElementById('bid-amount').value);
+      
+      if (!bidAmount || bidAmount <= 0) {
+        alert('Введите корректную сумму!');
+        return;
+      }
+      
+      db.ref(`lobbies/${lobbyId}/players/${auth.currentUser.uid}`).once('value').then(snapshot => {
+        const player = snapshot.val();
+        
+        if (bidAmount > player.money) {
+          alert('Недостаточно средств!');
+          return;
+        }
+        
+        // Обновляем текущую ставку
+        db.ref(`containers/${lobbyId}/current`).update({
+          topBid: bidAmount,
+          topBidder: auth.currentUser.uid,
+          topBidderName: player.name
+        });
+        
+        // Сбрасываем таймер
+        startTimer();
+      });
+    });
+    
+    // Инициализация при загрузке
+    document.addEventListener('DOMContentLoaded', () => {
+      loadGame();
+    });
+  </script>
+</body>
+</html>
