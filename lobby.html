@@ -622,6 +622,35 @@
       .settings-panel {
         width: 100%;
       }
+      .notification {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #FF5722;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 50px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: fadeInUp 0.3s ease-out;
+    }
+    
+    .notification.error {
+      background: #F44336;
+    }
+    
+    .notification.success {
+      background: #4CAF50;
+    }
+    
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+      to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
     }
   </style>
 </head>
@@ -1342,7 +1371,7 @@
       }, 3000);
     }
 
-    // Запускаем приложение
+    // Запуск игры при загрузке
     document.addEventListener('DOMContentLoaded', initLobby);
   </script>
 </body>
