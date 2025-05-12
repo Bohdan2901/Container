@@ -715,7 +715,7 @@
     // Загрузка списка лобби
     async function loadLobbies() {
       if (!validateNickname()) return;
-
+    
       try {
         elements.lobbyStatus.textContent = "Загрузка лобби...";
         elements.lobbyList.innerHTML = '';
@@ -727,6 +727,7 @@
         
         if (!snapshot.exists()) {
           elements.lobbyStatus.textContent = "Нет доступных лобби";
+          showNotification("Нет доступных лобби", "info");
           return;
         }
         
@@ -738,7 +739,6 @@
           const lobby = childSnapshot.val();
           const lobbyId = childSnapshot.key;
           
-          // Проверяем что лобби не заполнено и есть ведущий
           if (lobby.host && lobby.players && 
               Object.keys(lobby.players).length < (lobby.settings?.maxPlayers || 8)) {
             lobbies.push({
@@ -750,13 +750,12 @@
         
         if (lobbies.length === 0) {
           elements.lobbyStatus.textContent = "Нет доступных лобби";
+          showNotification("Нет доступных лобби", "info");
           return;
         }
         
-        // Сортируем лобби по дате создания (новые сверху)
-        lobbies.sort((a, b) => b.createdAt - a.createdAt);
+        lobbies.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
         
-        // Отображаем лобби
         lobbies.forEach(lobby => {
           const hostPlayer = lobby.players[lobby.host];
           const hostName = hostPlayer?.name || "Неизвестно";
@@ -769,15 +768,15 @@
             <div class="lobby-info">
               <div class="lobby-id">Лобби #${lobby.id}</div>
               <div class="lobby-players">Игроков: ${playerCount}/${maxPlayers}</div>
+              <div class="lobby-host">Ведущий: ${hostName}</div>
             </div>
-            <div class="lobby-host">Ведущий: ${hostName}</div>
+            <i class="fas fa-chevron-right"></i>
           `;
           
           lobbyItem.addEventListener('click', () => {
             joinLobby(lobby.id);
           });
           
-          // Анимация появления
           gsap.from(lobbyItem, {
             opacity: 0,
             x: -20,
