@@ -19,6 +19,10 @@
       --light: #ECEFF1;
       --success: #4CAF50;
       --error: #F44336;
+      --team-red: #F44336;
+      --team-blue: #2196F3;
+      --team-green: #4CAF50;
+      --team-yellow: #FFEB3B;
     }
     
     * {
@@ -181,6 +185,23 @@
       color: var(--accent);
     }
     
+    /* Стили для команд */
+    .player-card.team-red {
+      border-left: 4px solid var(--team-red);
+    }
+    
+    .player-card.team-blue {
+      border-left: 4px solid var(--team-blue);
+    }
+    
+    .player-card.team-green {
+      border-left: 4px solid var(--team-green);
+    }
+    
+    .player-card.team-yellow {
+      border-left: 4px solid var(--team-yellow);
+    }
+    
     .player-avatar {
       width: 60px;
       height: 60px;
@@ -192,6 +213,23 @@
       margin-bottom: 1rem;
       font-size: 1.5rem;
       color: white;
+      position: relative;
+    }
+    
+    /* Смайлик над аватаркой */
+    .player-emoji {
+      position: absolute;
+      top: -15px;
+      right: -15px;
+      font-size: 1.8rem;
+      transform: rotate(0deg);
+      animation: emojiFloat 3s infinite ease-in-out;
+      z-index: 2;
+    }
+    
+    @keyframes emojiFloat {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-10px) rotate(10deg); }
     }
     
     .player-name {
@@ -273,7 +311,7 @@
     }
     
     .chat-messages {
-      height: 200px;
+      height: 300px;
       overflow-y: auto;
       margin-bottom: 1.5rem;
       padding-right: 0.5rem;
@@ -305,6 +343,7 @@
       animation: fadeIn 0.3s ease-out;
       transition: all 0.3s ease;
       border-left: 3px solid var(--accent);
+      opacity: 1 !important; /* Фикс прозрачности сообщений */
     }
     
     .message:hover {
@@ -321,6 +360,13 @@
       font-size: 0.8rem;
       color: rgba(255, 255, 255, 0.5);
       margin-left: 0.5rem;
+    }
+    
+    /* Стили для смайликов в чате */
+    .emoji-message {
+      font-size: 1.5rem;
+      line-height: 1;
+      vertical-align: middle;
     }
     
     .chat-input-container {
@@ -358,6 +404,30 @@
     
     #send-message:hover {
       background: linear-gradient(45deg, var(--primary-dark), var(--primary));
+    }
+    
+    /* Кнопки смайликов */
+    .emoji-picker {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    
+    .emoji-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .emoji-btn:hover {
+      transform: scale(1.2);
+      background: rgba(255, 193, 7, 0.3);
     }
     
     /* Настройки лобби */
@@ -456,6 +526,23 @@
       background: #3d8b40;
     }
     
+    /* Кнопка закрытия лобби */
+    .close-lobby-btn {
+      width: 100%;
+      padding: 1rem;
+      background: var(--error);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 1rem;
+    }
+    
+    .close-lobby-btn:hover {
+      background: #d32f2f;
+    }
+    
     /* Анимации */
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(20px); }
@@ -544,6 +631,19 @@
         <i class="fas fa-comments"></i>
         <span>Чат лобби</span>
       </h2>
+      
+      <!-- Панель смайликов -->
+      <div class="emoji-picker" id="emoji-picker">
+        <button class="emoji-btn" data-emoji="😂">😂</button>
+        <button class="emoji-btn" data-emoji="😎">😎</button>
+        <button class="emoji-btn" data-emoji="🤔">🤔</button>
+        <button class="emoji-btn" data-emoji="👋">👋</button>
+        <button class="emoji-btn" data-emoji="🎉">🎉</button>
+        <button class="emoji-btn" data-emoji="💩">💩</button>
+        <button class="emoji-btn" data-emoji="👍">👍</button>
+        <button class="emoji-btn" data-emoji="❤️">❤️</button>
+      </div>
+      
       <div class="chat-messages" id="chat-messages">
         <div class="message">
           <span class="message-sender">Система:</span>
@@ -597,6 +697,13 @@
           <option value="teams4">Командный (4 команды)</option>
         </select>
       </div>
+      
+      <div class="setting-item">
+        <label class="setting-label">
+          <input type="checkbox" id="host-plays" checked>
+          Ведущий участвует в игре
+        </label>
+      </div>
     </div>
     
     <div class="settings-group">
@@ -625,6 +732,7 @@
     </div>
     
     <button class="save-settings" id="save-settings">Сохранить настройки</button>
+    <button class="close-lobby-btn" id="close-lobby">Закрыть лобби</button>
   </div>
 
   <!-- Firebase SDK -->
@@ -712,6 +820,12 @@
           
           updateLobbyUI(lobby, user.uid);
           updateSettingsUI(lobby.settings);
+          
+          // Проверяем статус игры
+          if (lobby.status === "starting" || lobby.status === "in-progress") {
+            // Если игра уже началась, перенаправляем в игру
+            window.location.href = `game.html?id=${lobbyId}`;
+          }
         });
         
         // 3. Настройка чата
@@ -737,6 +851,10 @@
       // Обновляем заголовок
       document.getElementById('lobby-id').textContent = `#${lobbyId}`;
       
+      // Обновляем статус лобби
+      document.getElementById('lobby-status-text').textContent = 
+        lobby.status === "waiting" ? "Ожидание игроков" : "Игра начинается...";
+      
       // Обновляем счетчик игроков
       const playerCount = Object.keys(lobby.players || {}).length;
       const maxPlayers = lobby.settings?.maxPlayers || 8;
@@ -758,9 +876,22 @@
         return 0;
       });
       
+      // Определяем команды для игроков
+      const teamColors = {
+        0: 'red',
+        1: 'blue',
+        2: 'green',
+        3: 'yellow'
+      };
+      
       sortedPlayers.forEach(([id, player]) => {
         const playerCard = document.createElement('div');
         playerCard.className = `player-card ${player.isHost ? 'host' : ''} ${id === currentUserId ? 'current-user' : ''}`;
+        
+        // Добавляем класс команды, если режим командный
+        if (lobby.settings?.gameMode?.includes('teams') && player.team !== undefined) {
+          playerCard.classList.add(`team-${teamColors[player.team] || 'red'}`);
+        }
         
         // Генерация аватарки по первой букве имени
         const firstLetter = player.name ? player.name.charAt(0).toUpperCase() : '?';
@@ -768,7 +899,10 @@
         const randomColor = avatarColors[Math.floor(Math.random() * avatarColors.length)];
         
         playerCard.innerHTML = `
-          <div class="player-avatar" style="background: ${randomColor}">${firstLetter}</div>
+          <div class="player-avatar" style="background: ${randomColor}">
+            ${firstLetter}
+            ${player.emoji ? `<div class="player-emoji">${player.emoji}</div>` : ''}
+          </div>
           <h3 class="player-name">
             ${player.name || 'Без имени'}
             ${id === currentUserId ? '<span class="you-badge">(Вы)</span>' : ''}
@@ -778,6 +912,37 @@
             <span>${player.money?.toLocaleString() || '0'} $</span>
           </div>
         `;
+        
+        // Добавляем обработчик для выбора команды
+        if (lobby.settings?.gameMode?.includes('teams') && lobby.host !== id && lobby.status === "waiting") {
+          playerCard.style.cursor = 'pointer';
+          playerCard.title = 'Нажмите для выбора команды';
+          
+          playerCard.addEventListener('click', async () => {
+            if (lobby.host === currentUserId) {
+              try {
+                // Получаем текущую команду игрока
+                const playerSnapshot = await db.ref(`lobbies/${lobbyId}/players/${id}`).once('value');
+                const currentTeam = playerSnapshot.val().team || 0;
+                
+                // Определяем следующую команду
+                let nextTeam = currentTeam + 1;
+                if (lobby.settings.gameMode === "teams" && nextTeam > 1) nextTeam = 0;
+                if (lobby.settings.gameMode === "teams4" && nextTeam > 3) nextTeam = 0;
+                
+                // Обновляем команду игрока
+                await db.ref(`lobbies/${lobbyId}/players/${id}`).update({
+                  team: nextTeam
+                });
+                
+                showSuccess(`Игрок ${player.name} теперь в команде ${teamColors[nextTeam]}`);
+              } catch (error) {
+                showError("Ошибка изменения команды");
+                console.error("Ошибка изменения команды:", error);
+              }
+            }
+          });
+        }
         
         // Анимация появления карточки
         gsap.from(playerCard, {
@@ -792,7 +957,7 @@
       
       // Показываем кнопку "Начать игру" только для ведущего
       const startBtn = document.getElementById('start-game');
-      if (lobby.host === currentUserId) {
+      if (lobby.host === currentUserId && lobby.status === "waiting") {
         startBtn.style.display = 'block';
         gsap.from(startBtn, {
           opacity: 0,
@@ -812,6 +977,7 @@
       const chatInput = document.getElementById('chat-input');
       const sendButton = document.getElementById('send-message');
       const chatMessages = document.getElementById('chat-messages');
+      const emojiPicker = document.getElementById('emoji-picker');
       
       // Разблокируем поле ввода
       chatInput.disabled = false;
@@ -819,14 +985,24 @@
       chatMessages.innerHTML = '';
       
       // Слушаем новые сообщения
-      chatRef.limitToLast(401000).on('child_added', (snapshot) => {
+      chatRef.limitToLast(100).on('child_added', (snapshot) => {
         const message = snapshot.val();
         displayMessage(message, currentUserId);
         
         // Плавная прокрутка вниз
-        chatMessages.scrollTo({
-          top: chatMessages.scrollHeight,
-          behavior: 'smooth'
+        setTimeout(() => {
+          chatMessages.scrollTo({
+            top: chatMessages.scrollHeight,
+            behavior: 'smooth'
+          });
+        }, 100);
+      });
+      
+      // Обработчики для кнопок смайликов
+      emojiPicker.querySelectorAll('.emoji-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const emoji = btn.dataset.emoji;
+          sendEmoji(emoji);
         });
       });
       
@@ -850,7 +1026,8 @@
             sender: player.name || 'Аноним',
             senderId: currentUserId,
             text: text,
-            timestamp: firebase.database.ServerValue.TIMESTAMP
+            timestamp: firebase.database.ServerValue.TIMESTAMP,
+            type: 'text'
           });
           
           // Очищаем поле ввода
@@ -859,6 +1036,37 @@
         } catch (error) {
           showError("Ошибка отправки сообщения");
           console.error("Ошибка отправки сообщения:", error);
+        }
+      }
+      
+      async function sendEmoji(emoji) {
+        try {
+          // Получаем данные игрока
+          const playerSnapshot = await db.ref(`lobbies/${lobbyId}/players/${currentUserId}`).once('value');
+          const player = playerSnapshot.val();
+          
+          // Отправляем смайлик как сообщение
+          await chatRef.push({
+            sender: player.name || 'Аноним',
+            senderId: currentUserId,
+            text: emoji,
+            timestamp: firebase.database.ServerValue.TIMESTAMP,
+            type: 'emoji'
+          });
+          
+          // Обновляем смайлик над аватаркой игрока
+          await db.ref(`lobbies/${lobbyId}/players/${currentUserId}`).update({
+            emoji: emoji
+          });
+          
+          // Автоматическое удаление смайлика через 5 секунд
+          setTimeout(async () => {
+            await db.ref(`lobbies/${lobbyId}/players/${currentUserId}/emoji`).remove();
+          }, 5000);
+          
+        } catch (error) {
+          showError("Ошибка отправки смайлика");
+          console.error("Ошибка отправки смайлика:", error);
         }
       }
       
@@ -871,11 +1079,19 @@
           minute: '2-digit'
         });
         
-        messageElement.innerHTML = `
-          <span class="message-sender">${message.sender}:</span>
-          <span>${message.text}</span>
-          <span class="message-time">${time}</span>
-        `;
+        if (message.type === 'emoji') {
+          messageElement.innerHTML = `
+            <span class="message-sender">${message.sender}:</span>
+            <span class="emoji-message">${message.text}</span>
+            <span class="message-time">${time}</span>
+          `;
+        } else {
+          messageElement.innerHTML = `
+            <span class="message-sender">${message.sender}:</span>
+            <span>${message.text}</span>
+            <span class="message-time">${time}</span>
+          `;
+        }
         
         // Анимация появления сообщения
         gsap.from(messageElement, {
@@ -886,6 +1102,11 @@
         });
         
         chatMessages.appendChild(messageElement);
+        
+        // Удаляем старые сообщения, если их больше 100
+        if (chatMessages.children.length > 100) {
+          chatMessages.removeChild(chatMessages.children[0]);
+        }
       }
     }
 
@@ -894,6 +1115,7 @@
       const settingsToggle = document.getElementById('settings-toggle');
       const settingsPanel = document.getElementById('settings-panel');
       const saveSettingsBtn = document.getElementById('save-settings');
+      const closeLobbyBtn = document.getElementById('close-lobby');
       
       // Переключение панели настроек
       settingsToggle.addEventListener('click', () => {
@@ -917,6 +1139,7 @@
             maxPlayers: parseInt(document.getElementById('max-players').value),
             startMoney: parseInt(document.getElementById('start-money').value),
             gameMode: document.getElementById('game-mode').value,
+            hostPlays: document.getElementById('host-plays').checked,
             randomEvents: document.getElementById('random-events').checked,
             specialContainers: document.getElementById('special-containers').checked,
             timeLimits: document.getElementById('time-limits').checked
@@ -933,6 +1156,32 @@
           console.error("Ошибка сохранения настроек:", error);
         }
       });
+      
+      // Закрытие лобби
+      closeLobbyBtn.addEventListener('click', async () => {
+        if (confirm("Вы уверены, что хотите закрыть лобби? Все игроки будут вынуждены выйти.")) {
+          try {
+            // Проверяем, является ли пользователь ведущим
+            const lobbySnapshot = await db.ref(`lobbies/${lobbyId}`).once('value');
+            const lobby = lobbySnapshot.val();
+            
+            if (lobby.host !== currentUserId) {
+              showError("Только ведущий может закрыть лобби!");
+              return;
+            }
+            
+            // Удаляем лобби из базы данных
+            await db.ref(`lobbies/${lobbyId}`).remove();
+            
+            // Перенаправляем ведущего на главную страницу
+            window.location.href = 'index.html';
+            
+          } catch (error) {
+            showError("Ошибка закрытия лобби");
+            console.error("Ошибка закрытия лобби:", error);
+          }
+        }
+      });
     }
     
     // Обновление UI настроек
@@ -942,6 +1191,7 @@
       document.getElementById('max-players').value = settings.maxPlayers || 8;
       document.getElementById('start-money').value = settings.startMoney || 10000;
       document.getElementById('game-mode').value = settings.gameMode || 'solo';
+      document.getElementById('host-plays').checked = settings.hostPlays !== false;
       document.getElementById('random-events').checked = settings.randomEvents !== false;
       document.getElementById('special-containers').checked = settings.specialContainers !== false;
       document.getElementById('time-limits').checked = settings.timeLimits !== false;
@@ -954,6 +1204,18 @@
       startBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Запуск игры...';
       
       try {
+        // Проверяем количество игроков
+        const lobbySnapshot = await db.ref(`lobbies/${lobbyId}`).once('value');
+        const lobby = lobbySnapshot.val();
+        const playerCount = Object.keys(lobby.players || {}).length;
+        
+        if (playerCount < 2) {
+          showError("Для начала игры нужно минимум 2 игрока!");
+          startBtn.disabled = false;
+          startBtn.innerHTML = '<i class="fas fa-play"></i> НАЧАТЬ ИГРУ';
+          return;
+        }
+        
         // Обновляем статус лобби
         await db.ref(`lobbies/${lobbyId}`).update({
           status: "starting",
