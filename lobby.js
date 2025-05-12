@@ -8,350 +8,351 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Инициализация Firebase
-  const firebaseConfig = {
-    apiKey: "AIzaSyCJuTuxuPhYxCjZXqMZWJTTmLrgxVkTGBY",
-    authDomain: "container-auction.firebaseapp.com",
-    databaseURL: "https://container-auction-default-rtdb.firebaseio.com",
-    projectId: "container-auction",
-    storageBucket: "container-auction.appspot.com",
-    messagingSenderId: "907236645178",
-    appId: "1:907236645178:web:7d5393a8592fbb81b7c442"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyCJuTuxuPhYxCjZXqMZWJTTmLrgxVkTGBY",
+  authDomain: "container-auction.firebaseapp.com",
+  databaseURL: "https://container-auction-default-rtdb.firebaseio.com",
+  projectId: "container-auction",
+  storageBucket: "container-auction.appspot.com",
+  messagingSenderId: "907236645178",
+  appId: "1:907236645178:web:7d5393a8592fbb81b7c442"
+};
 
-  const app = firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-  const auth = firebase.auth();
+const app = firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const auth = firebase.auth();
 
-  // Основная функция инициализации лобби
-  async function initLobby() {
-    try {
-      // Аутентификация
-      const userCredential = await auth.signInAnonymously();
-      const user = userCredential.user;
+// Основные переменные
+let currentUser = null;
+let lobbyId = null;
+let lobbyData = null;
 
-      // Создаем частицы фона
-      createParticles();
+// DOM элементы
+const elements = {
+  lobbyId: document.getElementById('lobby-id'),
+  playersCount: document.getElementById('players-count'),
+  playersList: document.getElementById('players-list'),
+  startGameBtn: document.getElementById('start-game'),
+  chatMessages: document.getElementById('chat-messages'),
+  chatInput: document.getElementById('chat-input'),
+  sendMessageBtn: document.getElementById('send-message'),
+  emojiPicker: document.getElementById('emoji-picker'),
+  settingsToggle: document.getElementById('settings-toggle'),
+  settingsPanel: document.getElementById('settings-panel')
+};
 
-      // Загрузка данных лобби
-      const lobbyRef = db.ref(`lobbies/${lobbyId}`);
-      lobbyRef.on('value', (snapshot) => {
-        const lobby = snapshot.val();
-        if (!lobby) {
-          showError("Лобби не найдено!");
-          setTimeout(() => window.location.href = 'index.html', 2000);
-          return;
-        }
-
-        updateLobbyUI(lobby, user.uid);
-      });
-
-      // Настройка чата
-      setupChat(user.uid);
-
-    } catch (error) {
-      showError("Ошибка инициализации: " + error.message);
-      console.error("Ошибка инициализации:", error);
-    }
+// Инициализация лобби
+function initLobby() {
+  lobbyId = new URLSearchParams(window.location.search).get('id');
+  if (!lobbyId) {
+    alert("Не указан ID лобби!");
+    window.location.href = 'index.html';
+    return;
   }
 
-  // Функция для создания частиц фона
-  function createParticles() {
-    const particlesContainer = document.getElementById('particles');
-    const particleCount = 30;
-    
-    for (let i = 0; i < particleCount; i++) {
-      const particle = document.createElement('div');
-      particle.classList.add('particle');
-      
-      const size = Math.random() * 10 + 5;
-      const posX = Math.random() * 100;
-      const delay = Math.random() * 15;
-      const duration = 15 + Math.random() * 30;
-      
-      particle.style.width = `${size}px`;
-      particle.style.height = `${size}px`;
-      particle.style.left = `${posX}%`;
-      particle.style.animationDelay = `${delay}s`;
-      particle.style.animationDuration = `${duration}s`;
-      particle.style.opacity = Math.random() * 0.5 + 0.1;
-      
-      particlesContainer.appendChild(particle);
-    }
-  }
+  createParticles();
+  
+  auth.signInAnonymously()
+    .then(userCredential => {
+      currentUser = userCredential.user;
+      setupLobby();
+      setupChat();
+      setupEventListeners();
+    })
+    .catch(error => {
+      console.error("Ошибка аутентификации:", error);
+      alert("Ошибка входа в лобби!");
+    });
+}
 
-  // Обновление интерфейса лобби
-  function updateLobbyUI(lobby, currentUserId) {
-    // Обновляем заголовок
-    document.getElementById('lobby-id').textContent = `#${lobbyId}`;
+// Настройка лобби
+function setupLobby() {
+  const lobbyRef = db.ref(`lobbies/${lobbyId}`);
+  
+  lobbyRef.on('value', snapshot => {
+    lobbyData = snapshot.val();
     
-    // Обновляем статус лобби
-    document.getElementById('lobby-status-text').textContent = 
-      lobby.status === "waiting" ? "Ожидание игроков" : "Игра начинается...";
-    
-    // Обновляем счетчик игроков
-    const playerCount = Object.keys(lobby.players || {}).length;
-    const maxPlayers = lobby.settings?.maxPlayers || 8;
-    document.getElementById('players-count').textContent = `${playerCount}/${maxPlayers} игроков`;
-    
-    // Обновляем список игроков
-    updatePlayersList(lobby, currentUserId);
-    
-    // Показываем кнопку "Начать игру" только для ведущего
-    const startBtn = document.getElementById('start-game');
-    if (lobby.host === currentUserId && lobby.status === "waiting") {
-      startBtn.style.display = 'block';
-      startBtn.onclick = () => startGame(lobbyId, currentUserId);
-    } else {
-      startBtn.style.display = 'none';
-    }
-  }
-
-  // Обновление списка игроков
-  function updatePlayersList(lobby, currentUserId) {
-    const playersContainer = document.getElementById('players-list');
-    playersContainer.innerHTML = '';
-    
-    const playerCount = Object.keys(lobby.players || {}).length;
-    if (playerCount === 0) {
-      playersContainer.innerHTML = '<p class="empty-message">Нет игроков в лобби</p>';
+    if (!lobbyData) {
+      alert("Лобби не найдено!");
+      window.location.href = 'index.html';
       return;
     }
     
-    // Сортируем игроков: ведущий первый, затем остальные
-    const sortedPlayers = Object.entries(lobby.players).sort((a, b) => {
-      if (a[1].isHost) return -1;
-      if (b[1].isHost) return 1;
-      return 0;
-    });
+    updateLobbyInfo();
+    updatePlayersList();
     
-    sortedPlayers.forEach(([id, player]) => {
-      const playerCard = document.createElement('div');
-      playerCard.className = `player-card ${player.isHost ? 'host' : ''} ${id === currentUserId ? 'current-user' : ''}`;
-      
-      // Добавляем класс команды, если режим командный
-      if (lobby.settings?.gameMode?.includes('teams') && player.team !== undefined) {
-        const teamColors = ['red', 'blue', 'green', 'yellow'];
-        playerCard.classList.add(`team-${teamColors[player.team] || 'red'}`);
-      }
-      
-      // Генерация аватарки
-      const firstLetter = player.name ? player.name.charAt(0).toUpperCase() : '?';
-      const avatarColors = ['#FF5722', '#2196F3', '#4CAF50', '#9C27B0', '#607D8B'];
-      const randomColor = avatarColors[Math.floor(Math.random() * avatarColors.length)];
-      
-      playerCard.innerHTML = `
-        <div class="player-avatar" style="background: ${randomColor}">
-          ${firstLetter}
-          ${player.emoji ? `<div class="player-emoji">${player.emoji}</div>` : ''}
-        </div>
-        <h3 class="player-name">
-          ${player.name || 'Без имени'}
-          ${id === currentUserId ? '<span class="you-badge">(Вы)</span>' : ''}
-        </h3>
-        <div class="player-money">
-          <i class="fas fa-coins"></i>
-          <span>${player.money?.toLocaleString() || '0'} $</span>
-        </div>
-        ${lobby.settings?.gameMode?.includes('teams') && player.team !== undefined ? 
-          `<div class="team-label">${getTeamName(player.team, lobby.settings.gameMode)}</div>` : ''}
-      `;
-      
-      playersContainer.appendChild(playerCard);
-    });
-  }
-
-  function getTeamName(teamIndex, gameMode) {
-    const teamNames = {
-      'teams': ['Красные', 'Синие'],
-      'teams4': ['Красные', 'Синие', 'Зеленые', 'Желтые']
-    };
-    
-    return teamNames[gameMode]?.[teamIndex] || `Команда ${teamIndex + 1}`;
-  }
-
-  // Настройка чата
-  function setupChat(currentUserId) {
-    const chatRef = db.ref(`chats/${lobbyId}`);
-    const chatInput = document.getElementById('chat-input');
-    const sendButton = document.getElementById('send-message');
-    const chatMessages = document.getElementById('chat-messages');
-    const emojiPicker = document.getElementById('emoji-picker');
-    
-    // Разблокируем поле ввода
-    chatInput.disabled = false;
-    sendButton.disabled = false;
-    chatMessages.innerHTML = '';
-    
-    // Слушаем новые сообщения
-    chatRef.limitToLast(100).on('child_added', (snapshot) => {
-      const message = snapshot.val();
-      displayMessage(message, currentUserId);
-      
-      // Плавная прокрутка вниз
-      setTimeout(() => {
-        chatMessages.scrollTo({
-          top: chatMessages.scrollHeight,
-          behavior: 'smooth'
-        });
-      }, 100);
-    });
-    
-    // Обработчики для кнопок смайликов
-    emojiPicker.querySelectorAll('.emoji-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const emoji = btn.dataset.emoji;
-        sendEmoji(emoji, currentUserId);
-      });
-    });
-    
-    // Отправка сообщения
-    sendButton.addEventListener('click', () => sendMessage(currentUserId));
-    chatInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') sendMessage(currentUserId);
-    });
-    
-    async function sendMessage(userId) {
-      const text = chatInput.value.trim();
-      if (!text) return;
-      
-      try {
-        // Получаем данные игрока
-        const playerSnapshot = await db.ref(`lobbies/${lobbyId}/players/${userId}`).once('value');
-        const player = playerSnapshot.val();
-        
-        // Отправляем сообщение
-        await chatRef.push({
-          sender: player.name || 'Аноним',
-          senderId: userId,
-          text: text,
-          timestamp: firebase.database.ServerValue.TIMESTAMP,
-          type: 'text'
-        });
-        
-        // Очищаем поле ввода
-        chatInput.value = '';
-        
-      } catch (error) {
-        showError("Ошибка отправки сообщения");
-        console.error("Ошибка отправки сообщения:", error);
-      }
-    }
-    
-    async function sendEmoji(emoji, userId) {
-      try {
-        // Получаем данные игрока
-        const playerSnapshot = await db.ref(`lobbies/${lobbyId}/players/${userId}`).once('value');
-        const player = playerSnapshot.val();
-        
-        // Отправляем смайлик как сообщение
-        await chatRef.push({
-          sender: player.name || 'Аноним',
-          senderId: userId,
-          text: emoji,
-          timestamp: firebase.database.ServerValue.TIMESTAMP,
-          type: 'emoji'
-        });
-        
-        // Обновляем смайлик над аватаркой игрока
-        await db.ref(`lobbies/${lobbyId}/players/${userId}`).update({
-          emoji: emoji
-        });
-        
-        // Автоматическое удаление смайлика через 5 секунд
-        setTimeout(async () => {
-          await db.ref(`lobbies/${lobbyId}/players/${userId}/emoji`).remove();
-        }, 5000);
-        
-      } catch (error) {
-        showError("Ошибка отправки смайлика");
-        console.error("Ошибка отправки смайлика:", error);
-      }
-    }
-    
-    function displayMessage(message, currentUserId) {
-      const messageElement = document.createElement('div');
-      messageElement.className = `message ${message.senderId === currentUserId ? 'own-message' : ''}`;
-      
-      const time = new Date(message.timestamp).toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-      
-      if (message.type === 'emoji') {
-        messageElement.innerHTML = `
-          <span class="message-sender">${message.sender}:</span>
-          <span class="emoji-message">${message.text}</span>
-          <span class="message-time">${time}</span>
-        `;
-      } else {
-        messageElement.innerHTML = `
-          <span class="message-sender">${message.sender}:</span>
-          <span>${message.text}</span>
-          <span class="message-time">${time}</span>
-        `;
-      }
-      
-      chatMessages.appendChild(messageElement);
-      
-      // Удаляем старые сообщения, если их больше 100
-      if (chatMessages.children.length > 100) {
-        chatMessages.removeChild(chatMessages.children[0]);
-      }
-    }
-  }
-
-  // Начало игры
-  async function startGame(lobbyId, userId) {
-    const startBtn = document.getElementById('start-game');
-    startBtn.disabled = true;
-    startBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Запуск игры...';
-    
-    try {
-      // Проверяем количество игроков
-      const lobbySnapshot = await db.ref(`lobbies/${lobbyId}`).once('value');
-      const lobby = lobbySnapshot.val();
-      const playerCount = Object.keys(lobby.players || {}).length;
-      
-      if (playerCount < 2) {
-        showError("Для начала игры нужно минимум 2 игрока!");
-        startBtn.disabled = false;
-        startBtn.innerHTML = '<i class="fas fa-play"></i> НАЧАТЬ ИГРУ';
-        return;
-      }
-      
-      // Обновляем статус лобби
-      await db.ref(`lobbies/${lobbyId}`).update({
-        status: "starting",
-        startTime: firebase.database.ServerValue.TIMESTAMP
-      });
-      
-      // Перенаправляем в игру
+    // Проверка статуса игры
+    if (lobbyData.status === "starting" || lobbyData.status === "in-progress") {
       window.location.href = `game.html?id=${lobbyId}`;
-      
-    } catch (error) {
-      showError("Ошибка при запуске игры");
-      console.error("Ошибка при запуске игры:", error);
-      
-      startBtn.disabled = false;
-      startBtn.innerHTML = '<i class="fas fa-play"></i> НАЧАТЬ ИГРУ';
     }
-  }
+  });
+  
+  // Удаление игрока при выходе
+  db.ref(`lobbies/${lobbyId}/players/${currentUser.uid}`).onDisconnect().remove();
+}
 
-  // Показать ошибку
-  function showError(message) {
-    const notification = document.createElement('div');
-    notification.className = 'notification error';
-    notification.innerHTML = `
-      <i class="fas fa-exclamation-circle"></i>
-      <span>${message}</span>
+// Обновление информации о лобби
+function updateLobbyInfo() {
+  elements.lobbyId.textContent = `#${lobbyId}`;
+  elements.playersCount.textContent = `${Object.keys(lobbyData.players || {}).length}/${lobbyData.settings.maxPlayers} игроков`;
+  
+  // Показываем кнопку "Начать игру" только для ведущего
+  elements.startGameBtn.style.display = lobbyData.host === currentUser.uid ? 'block' : 'none';
+}
+
+// Обновление списка игроков
+function updatePlayersList() {
+  elements.playersList.innerHTML = '';
+  
+  if (!lobbyData.players || Object.keys(lobbyData.players).length === 0) {
+    elements.playersList.innerHTML = '<p>Нет игроков в лобби</p>';
+    return;
+  }
+  
+  const teamColors = ['red', 'blue', 'green', 'yellow'];
+  const teamNames = {
+    'teams': ['Красные', 'Синие'],
+    'teams4': ['Красные', 'Синие', 'Зеленые', 'Желтые']
+  };
+  
+  Object.entries(lobbyData.players).forEach(([id, player]) => {
+    const playerCard = document.createElement('div');
+    playerCard.className = `player-card ${player.isHost ? 'host' : ''} ${id === currentUser.uid ? 'current-user' : ''}`;
+    
+    // Добавляем класс команды
+    if (lobbyData.settings.gameMode !== 'solo' && player.team !== undefined) {
+      playerCard.classList.add(`team-${teamColors[player.team] || 'red'}`);
+    }
+    
+    // Аватарка
+    const firstLetter = player.name ? player.name.charAt(0).toUpperCase() : '?';
+    const avatarColors = ['#FF5722', '#2196F3', '#4CAF50', '#9C27B0', '#607D8B'];
+    const randomColor = avatarColors[Math.floor(Math.random() * avatarColors.length)];
+    
+    playerCard.innerHTML = `
+      <div class="player-avatar" style="background: ${randomColor}">
+        ${firstLetter}
+        ${player.emoji ? `<div class="player-emoji">${player.emoji}</div>` : ''}
+      </div>
+      <h3 class="player-name">
+        ${player.name || 'Без имени'}
+        ${id === currentUser.uid ? '<span class="you-badge">(Вы)</span>' : ''}
+      </h3>
+      <div class="player-money">
+        <i class="fas fa-coins"></i>
+        <span>${player.money?.toLocaleString() || '0'} $</span>
+      </div>
+      ${lobbyData.settings.gameMode !== 'solo' && player.team !== undefined ? 
+        `<div class="team-label">${teamNames[lobbyData.settings.gameMode]?.[player.team] || `Команда ${player.team + 1}`}</div>` : ''}
     `;
     
-    document.body.appendChild(notification);
+    // Обработчик смены команды (только для ведущего)
+    if (lobbyData.host === currentUser.uid && id !== currentUser.uid && lobbyData.settings.gameMode !== 'solo') {
+      playerCard.style.cursor = 'pointer';
+      playerCard.addEventListener('click', () => changePlayerTeam(id, player.team || 0));
+    }
     
-    // Автоматическое скрытие через 5 секунд
-    setTimeout(() => notification.remove(), 5000);
-  }
+    elements.playersList.appendChild(playerCard);
+  });
+}
 
-  // Инициализация лобби
-  initLobby();
-});
+// Смена команды игрока
+function changePlayerTeam(playerId, currentTeam) {
+  let nextTeam = currentTeam + 1;
+  const maxTeams = lobbyData.settings.gameMode === 'teams' ? 1 : 3;
+  
+  if (nextTeam > maxTeams) nextTeam = 0;
+  
+  db.ref(`lobbies/${lobbyId}/players/${playerId}/team`).set(nextTeam)
+    .then(() => showNotification(`Команда игрока изменена`, 'success'))
+    .catch(error => showNotification(`Ошибка: ${error.message}`, 'error'));
+}
+
+// Настройка чата
+function setupChat() {
+  const chatRef = db.ref(`chats/${lobbyId}`);
+  
+  // Слушаем новые сообщения
+  chatRef.limitToLast(100).on('child_added', snapshot => {
+    const message = snapshot.val();
+    displayMessage(message);
+    
+    // Автопрокрутка
+    setTimeout(() => {
+      elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
+    }, 100);
+  });
+  
+  // Обработчики смайликов
+  elements.emojiPicker.querySelectorAll('.emoji-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const emoji = btn.dataset.emoji;
+      sendEmoji(emoji);
+    });
+  });
+}
+
+// Отправка сообщения
+function sendMessage() {
+  const text = elements.chatInput.value.trim();
+  if (!text) return;
+  
+  const message = {
+    sender: lobbyData.players[currentUser.uid]?.name || 'Аноним',
+    senderId: currentUser.uid,
+    text: text,
+    timestamp: firebase.database.ServerValue.TIMESTAMP,
+    type: 'text'
+  };
+  
+  db.ref(`chats/${lobbyId}`).push(message)
+    .then(() => {
+      elements.chatInput.value = '';
+    })
+    .catch(error => {
+      showNotification(`Ошибка отправки: ${error.message}`, 'error');
+    });
+}
+
+// Отправка смайлика
+function sendEmoji(emoji) {
+  // Обновляем смайлик игрока
+  db.ref(`lobbies/${lobbyId}/players/${currentUser.uid}/emoji`).set(emoji)
+    .then(() => {
+      // Автоматическое удаление через 5 секунд
+      setTimeout(() => {
+        db.ref(`lobbies/${lobbyId}/players/${currentUser.uid}/emoji`).remove();
+      }, 5000);
+      
+      // Отправляем в чат
+      const message = {
+        sender: lobbyData.players[currentUser.uid]?.name || 'Аноним',
+        senderId: currentUser.uid,
+        text: emoji,
+        timestamp: firebase.database.ServerValue.TIMESTAMP,
+        type: 'emoji'
+      };
+      
+      return db.ref(`chats/${lobbyId}`).push(message);
+    })
+    .catch(error => {
+      showNotification(`Ошибка отправки: ${error.message}`, 'error');
+    });
+}
+
+// Отображение сообщения
+function displayMessage(message) {
+  const messageElement = document.createElement('div');
+  messageElement.className = `message ${message.senderId === currentUser.uid ? 'own-message' : ''}`;
+  
+  const time = new Date(message.timestamp).toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+  
+  if (message.type === 'emoji') {
+    messageElement.innerHTML = `
+      <span class="message-sender">${message.sender}:</span>
+      <span class="emoji-message">${message.text}</span>
+      <span class="message-time">${time}</span>
+    `;
+  } else {
+    messageElement.innerHTML = `
+      <span class="message-sender">${message.sender}:</span>
+      <span>${message.text}</span>
+      <span class="message-time">${time}</span>
+    `;
+  }
+  
+  elements.chatMessages.appendChild(messageElement);
+  
+  // Удаляем старые сообщения
+  if (elements.chatMessages.children.length > 100) {
+    elements.chatMessages.removeChild(elements.chatMessages.children[0]);
+  }
+}
+
+// Начало игры
+function startGame() {
+  if (Object.keys(lobbyData.players).length < 2) {
+    showNotification("Нужно минимум 2 игрока!", "error");
+    return;
+  }
+  
+  elements.startGameBtn.disabled = true;
+  elements.startGameBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Запуск...';
+  
+  db.ref(`lobbies/${lobbyId}`).update({
+    status: "starting",
+    startTime: firebase.database.ServerValue.TIMESTAMP
+  })
+  .then(() => {
+    window.location.href = `game.html?id=${lobbyId}`;
+  })
+  .catch(error => {
+    showNotification(`Ошибка: ${error.message}`, "error");
+    elements.startGameBtn.disabled = false;
+    elements.startGameBtn.innerHTML = '<i class="fas fa-play"></i> НАЧАТЬ ИГРУ';
+  });
+}
+
+// Создание частиц фона
+function createParticles() {
+  const particlesContainer = document.getElementById('particles');
+  const particleCount = 30;
+  
+  for (let i = 0; i < particleCount; i++) {
+    const particle = document.createElement('div');
+    particle.classList.add('particle');
+    
+    const size = Math.random() * 10 + 5;
+    const posX = Math.random() * 100;
+    const delay = Math.random() * 15;
+    const duration = 15 + Math.random() * 30;
+    
+    particle.style.width = `${size}px`;
+    particle.style.height = `${size}px`;
+    particle.style.left = `${posX}%`;
+    particle.style.animationDelay = `${delay}s`;
+    particle.style.animationDuration = `${duration}s`;
+    particle.style.opacity = Math.random() * 0.5 + 0.1;
+    
+    particlesContainer.appendChild(particle);
+  }
+}
+
+// Показать уведомление
+function showNotification(message, type = "success") {
+  const notification = document.createElement('div');
+  notification.className = `notification ${type}`;
+  notification.innerHTML = `
+    <i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'check-circle'}"></i>
+    <span>${message}</span>
+  `;
+  
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.remove();
+  }, 3000);
+}
+
+// Настройка обработчиков событий
+function setupEventListeners() {
+  // Отправка сообщения
+  elements.sendMessageBtn.addEventListener('click', sendMessage);
+  elements.chatInput.addEventListener('keypress', e => {
+    if (e.key === 'Enter') sendMessage();
+  });
+  
+  // Начало игры
+  elements.startGameBtn.addEventListener('click', startGame);
+  
+  // Настройки
+  elements.settingsToggle.addEventListener('click', () => {
+    elements.settingsPanel.classList.toggle('active');
+  });
+}
+
+// Запуск при загрузке
+document.addEventListener('DOMContentLoaded', initLobby);
