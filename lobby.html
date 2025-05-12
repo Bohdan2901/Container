@@ -147,7 +147,7 @@
     }
     
     .player-card {
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.1);
       border-radius: 12px;
       padding: 1.5rem;
       backdrop-filter: blur(10px);
@@ -188,18 +188,49 @@
     /* Стили для команд */
     .player-card.team-red {
       border-left: 4px solid var(--team-red);
+      background: rgba(244, 67, 54, 0.1);
     }
     
     .player-card.team-blue {
       border-left: 4px solid var(--team-blue);
+      background: rgba(33, 150, 243, 0.1);
     }
     
     .player-card.team-green {
       border-left: 4px solid var(--team-green);
+      background: rgba(76, 175, 80, 0.1);
     }
     
     .player-card.team-yellow {
       border-left: 4px solid var(--team-yellow);
+      background: rgba(255, 235, 59, 0.1);
+    }
+    
+    .team-label {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 0.8rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      color: white;
+    }
+    
+    .team-red .team-label {
+      background: var(--team-red);
+    }
+    
+    .team-blue .team-label {
+      background: var(--team-blue);
+    }
+    
+    .team-green .team-label {
+      background: var(--team-green);
+    }
+    
+    .team-yellow .team-label {
+      background: var(--team-yellow);
+      color: #333;
     }
     
     .player-avatar {
@@ -343,7 +374,7 @@
       animation: fadeIn 0.3s ease-out;
       transition: all 0.3s ease;
       border-left: 3px solid var(--accent);
-      opacity: 1 !important; /* Фикс прозрачности сообщений */
+      opacity: 1 !important;
     }
     
     .message:hover {
@@ -508,6 +539,11 @@
     .setting-input:focus {
       outline: none;
       border-color: var(--accent);
+    }
+    
+    select.setting-input option {
+      background: var(--darker);
+      color: white;
     }
     
     .save-settings {
@@ -884,6 +920,13 @@
         3: 'yellow'
       };
       
+      const teamNames = {
+        0: 'Красные',
+        1: 'Синие',
+        2: 'Зеленые',
+        3: 'Желтые'
+      };
+      
       sortedPlayers.forEach(([id, player]) => {
         const playerCard = document.createElement('div');
         playerCard.className = `player-card ${player.isHost ? 'host' : ''} ${id === currentUserId ? 'current-user' : ''}`;
@@ -911,35 +954,35 @@
             <i class="fas fa-coins"></i>
             <span>${player.money?.toLocaleString() || '0'} $</span>
           </div>
+          ${lobby.settings?.gameMode?.includes('teams') && player.team !== undefined ? 
+            `<div class="team-label">${teamNames[player.team]}</div>` : ''}
         `;
         
         // Добавляем обработчик для выбора команды
-        if (lobby.settings?.gameMode?.includes('teams') && lobby.host !== id && lobby.status === "waiting") {
+        if (lobby.settings?.gameMode?.includes('teams') && lobby.host === currentUserId && id !== currentUserId && lobby.status === "waiting") {
           playerCard.style.cursor = 'pointer';
-          playerCard.title = 'Нажмите для выбора команды';
+          playerCard.title = 'Нажмите для смены команды';
           
           playerCard.addEventListener('click', async () => {
-            if (lobby.host === currentUserId) {
-              try {
-                // Получаем текущую команду игрока
-                const playerSnapshot = await db.ref(`lobbies/${lobbyId}/players/${id}`).once('value');
-                const currentTeam = playerSnapshot.val().team || 0;
-                
-                // Определяем следующую команду
-                let nextTeam = currentTeam + 1;
-                if (lobby.settings.gameMode === "teams" && nextTeam > 1) nextTeam = 0;
-                if (lobby.settings.gameMode === "teams4" && nextTeam > 3) nextTeam = 0;
-                
-                // Обновляем команду игрока
-                await db.ref(`lobbies/${lobbyId}/players/${id}`).update({
-                  team: nextTeam
-                });
-                
-                showSuccess(`Игрок ${player.name} теперь в команде ${teamColors[nextTeam]}`);
-              } catch (error) {
-                showError("Ошибка изменения команды");
-                console.error("Ошибка изменения команды:", error);
-              }
+            try {
+              // Получаем текущую команду игрока
+              const playerSnapshot = await db.ref(`lobbies/${lobbyId}/players/${id}`).once('value');
+              const currentTeam = playerSnapshot.val().team || 0;
+              
+              // Определяем следующую команду
+              let nextTeam = currentTeam + 1;
+              if (lobby.settings.gameMode === "teams" && nextTeam > 1) nextTeam = 0;
+              if (lobby.settings.gameMode === "teams4" && nextTeam > 3) nextTeam = 0;
+              
+              // Обновляем команду игрока
+              await db.ref(`lobbies/${lobbyId}/players/${id}`).update({
+                team: nextTeam
+              });
+              
+              showSuccess(`Игрок ${player.name} теперь в команде ${teamNames[nextTeam]}`);
+            } catch (error) {
+              showError("Ошибка изменения команды");
+              console.error("Ошибка изменения команды:", error);
             }
           });
         }
