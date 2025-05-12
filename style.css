@@ -307,3 +307,13 @@ button:hover::after {
     gap: 0.5rem;
   }
 }
+.lobby-item {
+  background: rgba(69,90,100,0.6);
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 8px;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
