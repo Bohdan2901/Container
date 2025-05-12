@@ -460,6 +460,19 @@ function generateRandomItems() {
   return items;
 }
 
+// В функции loadGameData()
+db.ref(`lobbies/${gameState.lobbyId}/status`).on('value', (snapshot) => {
+  const status = snapshot.val();
+  if (status === "starting") {
+    // Убедимся, что все игроки перешли в игру
+    setTimeout(() => {
+      db.ref(`lobbies/${gameState.lobbyId}`).update({
+        status: "in-progress"
+      });
+    }, 3000);
+  }
+});
+
 // Показать уведомление
 function showNotification(message, type = "success") {
   const notification = elements.notification;
