@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Создание нового лобби
   async function createLobby() {
     if (!validateNickname()) return;
-
+  
     try {
       const lobbyId = generateLobbyId();
       const playerData = {
@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
         isHost: true,
         joinedAt: firebase.database.ServerValue.TIMESTAMP
       };
-
+  
       // Создаем лобби в базе данных
       await db.ref(`lobbies/${lobbyId}`).set({
         host: currentUser.uid,
