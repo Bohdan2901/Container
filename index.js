@@ -171,23 +171,26 @@ document.addEventListener('DOMContentLoaded', () => {
   // Подключение к лобби
   async function joinLobby(lobbyId) {
     if (!validateNickname()) return;
-
+  
     try {
       // Проверяем существует ли лобби
       const lobbySnapshot = await db.ref(`lobbies/${lobbyId}`).once('value');
       const lobby = lobbySnapshot.val();
       
-      if (!lobby || !lobby.host) {
+      if (!lobby || !lobby.players) {
         showNotification("Лобби не найдено или повреждено!", "error");
         return;
       }
       
       // Проверяем есть ли место в лобби
-      if (Object.keys(lobby.players || {}).length >= (lobby.settings?.maxPlayers || 8)) {
+      const playerCount = Object.keys(lobby.players).length;
+      const maxPlayers = lobby.settings?.maxPlayers || 8;
+      
+      if (playerCount >= maxPlayers) {
         showNotification("Лобби заполнено!", "error");
         return;
       }
-
+  
       // Добавляем игрока в лобби
       await db.ref(`lobbies/${lobbyId}/players/${currentUser.uid}`).set({
         name: nickname,
