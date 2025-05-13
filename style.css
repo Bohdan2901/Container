@@ -317,3 +317,11 @@ button:hover::after {
   justify-content: space-between;
   align-items: center;
 }
+.player-card {
+  background: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+.player-card:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+}
