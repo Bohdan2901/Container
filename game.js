@@ -26,7 +26,13 @@ const gameState = {
   currentBidder: null,
   currentBidderName: null,
   isContainerOpen: false,
-  containerItems: []
+  containerItems: [],
+  gameMode: 'solo',
+  teamColors: ['red', 'blue', 'green', 'yellow'],
+  teamNames: {
+    'teams': ['Красные', 'Синие'],
+    'teams4': ['Красные', 'Синие', 'Зеленые', 'Желтые']
+  }
 };
 
 // DOM элементы
@@ -105,7 +111,7 @@ function setupEventListeners() {
     if (e.key === 'Enter') placeBid();
   });
   
-  // Клик по контейнеру для открытия
+  // Клик по контейнеру для открытия (только если он уже открыт)
   elements.container.addEventListener('click', () => {
     if (gameState.isContainerOpen) {
       openContainer();
@@ -125,6 +131,7 @@ function loadGameData() {
     }
 
     gameState.totalContainers = lobby.settings?.containers || 10;
+    gameState.gameMode = lobby.settings?.gameMode || 'solo';
     updateLobbyInfo();
 
     // Загружаем текущий контейнер
@@ -150,7 +157,6 @@ function loadGameData() {
   });
 }
 
-
 // Загрузка текущего контейнера
 function loadCurrentContainer() {
   db.ref(`containers/${gameState.lobbyId}/current`).on('value', (snapshot) => {
@@ -161,16 +167,18 @@ function loadCurrentContainer() {
       return;
     }
     
+    gameState.currentContainer = container.number || 1;
     gameState.currentBid = container.topBid || 0;
     gameState.currentBidder = container.topBidder || null;
     gameState.currentBidderName = container.topBidderName || null;
     gameState.containerItems = container.items || [];
+    gameState.isContainerOpen = container.isOpen || false;
     
     updateBidInfo();
+    updateLobbyInfo();
     
     // Если контейнер открыт
-    if (container.isOpen) {
-      gameState.isContainerOpen = true;
+    if (gameState.isContainerOpen) {
       openContainer();
     } else {
       // Запускаем таймер только если контейнер не открыт
@@ -221,6 +229,11 @@ function renderPlayers(players) {
   sortedPlayers.forEach(([id, player]) => {
     const playerEl = document.createElement('div');
     playerEl.className = `player-card ${id === gameState.currentUser.uid ? 'current' : ''} ${player.isHost ? 'host' : ''}`;
+    
+    // Добавляем класс команды если режим командный
+    if (gameState.gameMode !== 'solo' && player.team !== undefined) {
+      playerEl.classList.add(`team-${gameState.teamColors[player.team]}`);
+    }
     
     // Аватарка из первой буквы имени
     const firstLetter = player.name ? player.name.charAt(0).toUpperCase() : '?';
@@ -360,6 +373,8 @@ function openContainer() {
   if (gameState.isContainerOpen) return;
   
   gameState.isContainerOpen = true;
+  
+  // Анимация открытия контейнера
   elements.container.classList.add('open');
   
   // Показываем содержимое контейнера
@@ -385,17 +400,21 @@ function renderContainerItems() {
   
   // Добавляем заголовок с общей стоимостью
   const totalEl = document.createElement('div');
-  totalEl.className = 'item';
-  totalEl.style.background = 'var(--primary)';
-  totalEl.style.fontWeight = 'bold';
-  totalEl.textContent = `Общая стоимость: $${totalValue}`;
+  totalEl.className = 'item item-legendary';
+  totalEl.innerHTML = `
+    <div class="item-icon">💰</div>
+    <span>Общая стоимость: $${totalValue}</span>
+  `;
   elements.containerItems.appendChild(totalEl);
   
   // Добавляем предметы
   gameState.containerItems.forEach((item) => {
     const itemEl = document.createElement('div');
-    itemEl.className = 'item';
-    itemEl.textContent = `${item.name} ($${item.value})`;
+    itemEl.className = `item ${item.rarity ? 'item-' + item.rarity : ''}`;
+    itemEl.innerHTML = `
+      <div class="item-icon">${item.icon || '📦'}</div>
+      <span>${item.name} ($${item.value})</span>
+    `;
     elements.containerItems.appendChild(itemEl);
   });
   
@@ -403,6 +422,10 @@ function renderContainerItems() {
   if (gameState.currentBidder) {
     db.ref(`lobbies/${gameState.lobbyId}/players/${gameState.currentBidder}/totalWon`)
       .transaction((total) => (total || 0) + totalValue);
+      
+    // Увеличиваем счетчик выигранных контейнеров
+    db.ref(`lobbies/${gameState.lobbyId}/players/${gameState.currentBidder}/wins`)
+      .transaction((wins) => (wins || 0) + 1);
   }
 }
 
@@ -430,6 +453,7 @@ function startNewRound() {
   
   // Создаем новый контейнер
   db.ref(`containers/${gameState.lobbyId}/current`).set({
+    number: gameState.currentContainer,
     topBid: 0,
     topBidder: null,
     topBidderName: null,
@@ -448,27 +472,60 @@ function startNewRound() {
 // Генерация случайных предметов
 function generateRandomItems() {
   const items = [];
-  const itemCount = Math.floor(Math.random() * 3) + 3; // 3-5 предметов
+  const itemCount = Math.floor(Math.random() * 5) + 3; // 3-7 предметов
   
   const possibleItems = [
-    { name: "Золотые слитки", baseValue: 5000 },
-    { name: "Антикварная ваза", baseValue: 3000 },
-    { name: "Электроника", baseValue: 2000 },
-    { name: "Драгоценности", baseValue: 1500 },
-    { name: "Редкие монеты", baseValue: 1000 },
-    { name: "Художественные картины", baseValue: 4000 },
-    { name: "Вино премиум класса", baseValue: 800 },
-    { name: "Коллекционные предметы", baseValue: 1200 }
+    // Обычные предметы
+    { name: "Старые книги", value: 200, icon: "📚", rarity: "common" },
+    { name: "Одежда", value: 150, icon: "👕", rarity: "common" },
+    { name: "Посуда", value: 100, icon: "🍽️", rarity: "common" },
+    { name: "Инструменты", value: 300, icon: "🛠️", rarity: "common" },
+    { name: "Электроника", value: 500, icon: "📱", rarity: "common" },
+    
+    // Редкие предметы
+    { name: "Золотые украшения", value: 1500, icon: "💍", rarity: "rare" },
+    { name: "Антиквариат", value: 2000, icon: "🏺", rarity: "rare" },
+    { name: "Дизайнерская одежда", value: 1200, icon: "👗", rarity: "rare" },
+    { name: "Коллекционные предметы", value: 1800, icon: "🎭", rarity: "rare" },
+    
+    // Эпические предметы
+    { name: "Картина известного художника", value: 5000, icon: "🎨", rarity: "epic" },
+    { name: "Редкие монеты", value: 4000, icon: "🪙", rarity: "epic" },
+    { name: "Старинные часы", value: 4500, icon: "⌚", rarity: "epic" },
+    
+    // Легендарные предметы
+    { name: "Золотые слитки", value: 10000, icon: "🧱", rarity: "legendary" },
+    { name: "Бриллианты", value: 15000, icon: "💎", rarity: "legendary" },
+    { name: "Редкий автомобиль", value: 20000, icon: "🚗", rarity: "legendary" }
   ];
   
+  // Определяем шансы для редкостей
+  const rarityChances = {
+    common: 60,
+    rare: 25,
+    epic: 10,
+    legendary: 5
+  };
+  
   for (let i = 0; i < itemCount; i++) {
-    const randomItem = possibleItems[Math.floor(Math.random() * possibleItems.length)];
-    const value = Math.round(randomItem.baseValue * (0.8 + Math.random() * 0.4)); // +/- 20% от базовой стоимости
+    // Выбираем редкость предмета
+    let rarity = 'common';
+    const rand = Math.random() * 100;
+    if (rand < rarityChances.legendary) rarity = 'legendary';
+    else if (rand < rarityChances.legendary + rarityChances.epic) rarity = 'epic';
+    else if (rand < rarityChances.legendary + rarityChances.epic + rarityChances.rare) rarity = 'rare';
     
-    items.push({
-      name: randomItem.name,
-      value: value
-    });
+    // Фильтруем предметы по редкости
+    const filteredItems = possibleItems.filter(item => item.rarity === rarity);
+    
+    if (filteredItems.length > 0) {
+      const randomItem = {...filteredItems[Math.floor(Math.random() * filteredItems.length)]};
+      
+      // Добавляем вариативность стоимости (+/- 30%)
+      randomItem.value = Math.round(randomItem.value * (0.7 + Math.random() * 0.6));
+      
+      items.push(randomItem);
+    }
   }
   
   return items;
